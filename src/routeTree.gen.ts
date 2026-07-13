@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as OpenSundayRouteImport } from './routes/open-sunday'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ShoppingRoute = ShoppingRouteImport.update({
   id: '/shopping',
   path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpenSundayRoute = OpenSundayRouteImport.update({
+  id: '/open-sunday',
+  path: '/open-sunday',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/open-sunday': typeof OpenSundayRoute
   '/shopping': typeof ShoppingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/open-sunday': typeof OpenSundayRoute
   '/shopping': typeof ShoppingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/open-sunday': typeof OpenSundayRoute
   '/shopping': typeof ShoppingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/shopping'
+  fullPaths: '/' | '/open-sunday' | '/shopping'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/shopping'
-  id: '__root__' | '/' | '/shopping'
+  to: '/' | '/open-sunday' | '/shopping'
+  id: '__root__' | '/' | '/open-sunday' | '/shopping'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OpenSundayRoute: typeof OpenSundayRoute
   ShoppingRoute: typeof ShoppingRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/shopping'
       fullPath: '/shopping'
       preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/open-sunday': {
+      id: '/open-sunday'
+      path: '/open-sunday'
+      fullPath: '/open-sunday'
+      preLoaderRoute: typeof OpenSundayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OpenSundayRoute: OpenSundayRoute,
   ShoppingRoute: ShoppingRoute,
 }
 export const routeTree = rootRouteImport
