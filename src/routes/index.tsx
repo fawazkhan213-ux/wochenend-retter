@@ -276,17 +276,19 @@ function Dashboard() {
           ))}
         </div>
         {orderedCategories.length > 2 && (
-          <button
-            onClick={() => setShowAllCategories((s) => !s)}
-            className="mt-3 mx-auto flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-ink px-3 py-1.5 rounded-full bg-white ring-1 ring-black/5"
-          >
-            {showAllCategories ? "Weniger" : "Mehr anzeigen"}
-            <ChevronDown
-              className={`size-3 transition-transform ${
-                showAllCategories ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+          <div className="mt-3 flex justify-center">
+            <button
+              onClick={() => setShowAllCategories((s) => !s)}
+              className="flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-ink px-3 py-1.5 rounded-full bg-white ring-1 ring-black/5"
+            >
+              {showAllCategories ? "Weniger" : "Mehr anzeigen"}
+              <ChevronDown
+                className={`size-3 transition-transform ${
+                  showAllCategories ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          </div>
         )}
       </section>
 
