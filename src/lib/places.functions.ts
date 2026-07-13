@@ -115,6 +115,57 @@ export const searchNearbyPlaces = createServerFn({ method: "POST" })
     return normalize(json);
   });
 
+const GEOCODE_URL =
+  "https://connector-gateway.lovable.dev/google_maps/maps/api/geocode/json";
+
+export const geocodeCity = createServerFn({ method: "POST" })
+  .inputValidator((data: { city: string }) => {
+    if (typeof data.city !== "string" || !data.city.trim()) {
+      throw new Error("city required");
+    }
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const gmKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!lovableKey || !gmKey) {
+      throw new Error("Google Maps connector credentials missing");
+    }
+
+    const url = `${GEOCODE_URL}?address=${encodeURIComponent(data.city.trim())}&language=de`;
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": gmKey,
+      },
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`Geocode failed [${response.status}]: ${errText}`);
+      throw new Error(`Geocode request failed [${response.status}]`);
+    }
+
+    const json = (await response.json()) as {
+      status?: string;
+      results?: Array<{
+        formatted_address?: string;
+        geometry?: { location?: { lat?: number; lng?: number } };
+      }>;
+    };
+
+    const hit = json.results?.[0];
+    const loc = hit?.geometry?.location;
+    if (!hit || typeof loc?.lat !== "number" || typeof loc?.lng !== "number") {
+      throw new Error(`Keine Koordinaten für „${data.city}“ gefunden`);
+    }
+    return {
+      lat: loc.lat,
+      lng: loc.lng,
+      formatted: hit.formatted_address ?? data.city,
+    };
+  });
+
 const TEXT_GATEWAY_URL =
   "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText";
 
