@@ -45,8 +45,23 @@ export function useGeolocation() {
       return;
     }
     setState((s) => ({ ...s, loading: true, error: null }));
+    // Some sandboxed iframes never resolve getCurrentPosition even when
+    // permission is "granted". Enforce our own timeout as a safety net.
+    let settled = false;
+    const timer = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      setState({
+        coords: null,
+        error: "Standort dauert zu lange — nutze die Stadt als Fallback.",
+        loading: false,
+      });
+    }, 6000);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
         const coords: Coords = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
@@ -62,6 +77,9 @@ export function useGeolocation() {
         setState({ coords, error: null, loading: false });
       },
       (err) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
         setState({
           coords: null,
           error:
@@ -71,8 +89,21 @@ export function useGeolocation() {
           loading: false,
         });
       },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 },
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 5 * 60 * 1000 },
     );
+  }, []);
+
+  // Allow callers (e.g. a "use city" fallback) to seed coords manually.
+  const setCoordsManually = useCallback((coords: Coords) => {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ coords, savedAt: Date.now() } satisfies Stored),
+      );
+    } catch {
+      // ignore
+    }
+    setState({ coords, error: null, loading: false });
   }, []);
 
   const clear = useCallback(() => {
@@ -84,7 +115,7 @@ export function useGeolocation() {
     setState({ coords: null, error: null, loading: false });
   }, []);
 
-  return { ...state, request, clear };
+  return { ...state, request, clear, setCoords: setCoordsManually };
 }
 
 // Convenience: haversine distance in meters — used to sort/label nearby places.
