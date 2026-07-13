@@ -113,14 +113,18 @@ function ShoppingPage() {
     const text = formatListForShare(active);
     const title = active.name;
     try {
+      const nav: Navigator | undefined =
+        typeof navigator === "undefined" ? undefined : navigator;
       // Web Share API works on iOS, Android, and modern desktop browsers.
-      if (typeof navigator !== "undefined" && "share" in navigator) {
-        await navigator.share({ title, text });
+      if (nav && typeof nav.share === "function") {
+        await nav.share({ title, text });
         return;
       }
-      await navigator.clipboard.writeText(text);
-      setShareToast("In die Zwischenablage kopiert");
-      setTimeout(() => setShareToast(null), 2500);
+      if (nav?.clipboard?.writeText) {
+        await nav.clipboard.writeText(text);
+        setShareToast("In die Zwischenablage kopiert");
+        setTimeout(() => setShareToast(null), 2500);
+      }
     } catch {
       // user cancelled or share failed — do nothing loud
     }
