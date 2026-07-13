@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LocateFixed, MapPin, Navigation } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -16,7 +16,7 @@ import {
   useGeolocation,
   type Coords,
 } from "@/lib/geolocation";
-import sundayImage from "@/assets/sonntag-park.jpg";
+import meadowImage from "@/assets/sonntag-meadow.jpg";
 
 export const Route = createFileRoute("/plan")({
   head: () => ({
@@ -45,9 +45,14 @@ function PlanPage() {
     "sonntag.savedPlan",
     null,
   );
-  const [nearbyKind, setNearbyKind] = useState<"museum" | "movie_theater">(
-    "museum",
-  );
+
+  // Scope the outing color palette to this route only.
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", "outing");
+    return () => {
+      document.documentElement.removeAttribute("data-theme");
+    };
+  }, []);
 
   const weatherFn = useServerFn(getSundayWeather);
   const query = useQuery({
@@ -59,15 +64,20 @@ function PlanPage() {
 
   const placesFn = useServerFn(searchNearbyPlaces);
   const places = useQuery({
-    queryKey: ["plan-nearby", nearbyKind, geo.coords?.lat, geo.coords?.lng],
+    queryKey: ["plan-nearby-visit", geo.coords?.lat, geo.coords?.lng],
     queryFn: () =>
       placesFn({
         data: {
           lat: geo.coords!.lat,
           lng: geo.coords!.lng,
-          includedTypes: [nearbyKind],
+          includedTypes: [
+            "park",
+            "museum",
+            "cafe",
+            "tourist_attraction",
+          ],
           radius: 5000,
-          maxResults: 10,
+          maxResults: 12,
         },
       }),
     enabled: !!geo.coords,
@@ -83,6 +93,20 @@ function PlanPage() {
       }))
       .sort((a, b) => a.distance - b.distance);
   }, [places.data, geo.coords]);
+
+  const glyphFor = (typeLabel: string): string => {
+    const t = typeLabel.toLowerCase();
+    if (t.includes("park")) return "🌳";
+    if (t.includes("museum")) return "🏛";
+    if (t.includes("café") || t.includes("cafe")) return "☕";
+    return "📍";
+  };
+
+  const directionsUrl = (p: { lat: number; lng: number; name: string; mapsUri: string }) =>
+    p.mapsUri ||
+    `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&destination_place_id=${encodeURIComponent(
+      p.name,
+    )}`;
 
   const vibe = query.data?.vibe ?? "any";
   const suggestions = useMemo(
@@ -106,10 +130,10 @@ function PlanPage() {
       </header>
 
       <section className="px-5 mb-6">
-        <div className="bg-zinc-100 rounded-[20px] overflow-hidden ring-1 ring-black/5">
+        <div className="bg-white rounded-[20px] overflow-hidden ring-1 ring-black/5">
           <img
-            src={sundayImage}
-            alt="Nebliger Sonntagmorgen im Park"
+            src={meadowImage}
+            alt="Sonnige Wiese mit Picknickdecke"
             width={1200}
             height={600}
             loading="lazy"
@@ -118,7 +142,7 @@ function PlanPage() {
           <div className="p-5">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-medium">Wetter in {query.data?.city ?? city}</h4>
-              <span className="text-sm text-zinc-500">
+              <span className="text-sm opacity-70">
                 {query.isLoading
                   ? "…"
                   : query.data
@@ -126,7 +150,7 @@ function PlanPage() {
                     : "keine Daten"}
               </span>
             </div>
-            <p className="text-sm text-zinc-600 leading-normal text-pretty">
+            <p className="text-sm opacity-80 leading-normal text-pretty">
               {query.data
                 ? query.data.vibe === "sunny"
                   ? "Rausgehen. Der Sonntag verlangt Sonne im Gesicht."
@@ -163,11 +187,11 @@ function PlanPage() {
         </form>
       </section>
 
-      {/* Nearby museums / cinemas */}
+      {/* Places to visit nearby */}
       <section className="px-5 mb-10">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
-            In deiner Nähe
+            Orte in deiner Nähe
           </h3>
           <button
             onClick={geo.request}
@@ -179,62 +203,82 @@ function PlanPage() {
           </button>
         </div>
 
-        <div className="flex gap-2 mb-3">
-          {(["museum", "movie_theater"] as const).map((k) => {
-            const label = k === "museum" ? "Museen" : "Kinos";
-            const isActive = nearbyKind === k;
-            return (
-              <button
-                key={k}
-                onClick={() => setNearbyKind(k)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium ring-1 transition ${
-                  isActive
-                    ? "bg-ink text-canvas ring-ink"
-                    : "bg-white text-ink ring-black/5"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
         {!geo.coords && (
-          <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500 flex flex-col items-center gap-2">
-            <MapPin className="size-5 text-zinc-400" />
-            Standort teilen, um Museen und Kinos in deiner Nähe zu sehen.
+          <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500 flex flex-col items-center gap-3">
+            <MapPin className="size-6 text-accent-yellow" />
+            <p>Standort teilen, um Parks, Museen und Cafés in deiner Nähe zu finden.</p>
+            <button
+              onClick={geo.request}
+              disabled={geo.loading}
+              className="mt-1 bg-ink text-canvas rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              Standort teilen
+            </button>
           </div>
         )}
 
         {geo.coords && places.isLoading && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500">
-            Suche…
+            Suche Orte in deiner Nähe …
           </div>
         )}
 
         {geo.coords && withDistance.length > 0 && (
-          <ul className="bg-white rounded-2xl ring-1 ring-black/5 divide-y divide-zinc-100">
+          <div className="flex gap-3 overflow-x-auto -mx-5 px-5 pb-2 snap-x snap-mandatory">
             {withDistance.map((p) => (
-              <li key={p.id} className="px-4 py-3 flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{p.name}</div>
-                  <div className="text-xs text-zinc-500 truncate">{p.address}</div>
-                  <div className="text-xs text-zinc-400 mt-0.5">
-                    {formatDistance(p.distance)}
-                    {p.openNow === true ? " · offen" : p.openNow === false ? " · geschlossen" : ""}
+              <div
+                key={p.id}
+                className="snap-start shrink-0 w-64 bg-white rounded-2xl ring-1 ring-black/5 p-4 flex flex-col gap-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="size-9 rounded-lg bg-accent-yellow/40 flex items-center justify-center text-lg">
+                    {glyphFor(p.typeLabel)}
                   </div>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                    {formatDistance(p.distance)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">{p.name}</div>
+                  <div className="text-xs text-zinc-500 line-clamp-2">
+                    {p.address}
+                  </div>
+                  {p.typeLabel && (
+                    <div className="text-[10px] uppercase tracking-wider text-zinc-400 mt-1">
+                      {p.typeLabel}
+                      {p.openNow === true
+                        ? " · offen"
+                        : p.openNow === false
+                          ? " · geschlossen"
+                          : ""}
+                    </div>
+                  )}
                 </div>
                 <a
-                  href={p.mapsUri || mapsSearchUrl(p.name)}
+                  href={directionsUrl(p)}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1 shrink-0"
+                  className="mt-auto text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-xl bg-ink text-canvas flex items-center justify-center gap-1"
                 >
-                  <Navigation className="size-3" /> Route
+                  <Navigation className="size-3" /> Route öffnen
                 </a>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
+        )}
+
+        {geo.coords && !places.isLoading && withDistance.length === 0 && (
+          <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500">
+            Keine Orte in 5 km gefunden.{" "}
+            <a
+              href={mapsSearchUrl("Parks in der Nähe")}
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              Auf Google Maps öffnen
+            </a>
+          </div>
         )}
       </section>
 
