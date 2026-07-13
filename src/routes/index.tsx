@@ -5,8 +5,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { SUNDAY_CATEGORIES } from "@/lib/sunday-data";
 import { getWeekendStatus, panicLabel } from "@/lib/time";
 import { useLocalStorage } from "@/lib/useLocalStorage";
-
-type ShoppingItem = { id: string; text: string; done: boolean };
+import { useHydrated } from "@/lib/useHydrated";
+import { getActiveList, type ShoppingList } from "@/lib/shopping-lists";
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -17,14 +17,19 @@ function pad(n: number) {
 }
 
 function Dashboard() {
+  const hydrated = useHydrated();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
   const status = useMemo(() => getWeekendStatus(now), [now]);
-  const [items] = useLocalStorage<ShoppingItem[]>("sonntag.shopping", []);
+  const [lists] = useLocalStorage<ShoppingList[]>("sonntag.lists", []);
+  const [activeId] = useLocalStorage<string | null>("sonntag.activeListId", null);
+  const active = getActiveList(lists, activeId);
+  const items = active?.items ?? [];
   const openCount = items.filter((i) => !i.done).length;
 
   return (
@@ -63,15 +68,15 @@ function Dashboard() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="font-display text-6xl leading-none">
-              {pad(status.hours)}
+              {hydrated ? pad(status.hours) : "--"}
             </span>
             <span className="font-display text-4xl text-zinc-500">:</span>
             <span className="font-display text-6xl leading-none">
-              {pad(status.minutes)}
+              {hydrated ? pad(status.minutes) : "--"}
             </span>
             <span className="font-display text-4xl text-zinc-500">:</span>
             <span className="font-display text-4xl leading-none text-zinc-500">
-              {pad(status.seconds)}
+              {hydrated ? pad(status.seconds) : "--"}
             </span>
           </div>
           <p className="mt-4 text-sm text-zinc-400 max-w-[35ch] text-pretty">
