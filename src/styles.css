@@ -5,6 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
+ * Sonntagsruhe Planner — design tokens.
+ * Warm off-white canvas, deep ink text, yellow Bauhaus accent.
+ * Typography: Instrument Serif display + Inter body (loaded via <link> in __root).
+ *
  * Design system definition.
  *
  * The @theme inline block maps CSS custom properties to Tailwind utility
