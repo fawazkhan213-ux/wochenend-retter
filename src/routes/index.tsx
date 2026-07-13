@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SUNDAY_CATEGORIES } from "@/lib/sunday-data";
@@ -7,6 +9,7 @@ import { getWeekendStatus, panicLabel } from "@/lib/time";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { useHydrated } from "@/lib/useHydrated";
 import { getActiveList, type ShoppingList } from "@/lib/shopping-lists";
+import { getSundayWeather } from "@/lib/weather.functions";
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -15,6 +18,8 @@ export const Route = createFileRoute("/")({
 function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
+
+type CountdownUnit = "sec" | "hours" | "days";
 
 function Dashboard() {
   const hydrated = useHydrated();
@@ -31,6 +36,23 @@ function Dashboard() {
   const active = getActiveList(lists, activeId);
   const items = active?.items ?? [];
   const openCount = items.filter((i) => !i.done).length;
+
+  const [unit, setUnit] = useLocalStorage<CountdownUnit>(
+    "sonntag.countdownUnit",
+    "sec",
+  );
+  const [city] = useLocalStorage<string>("sonntag.city", "Berlin");
+
+  const weatherFn = useServerFn(getSundayWeather);
+  const weather = useQuery({
+    queryKey: ["dashboard-weather", city],
+    queryFn: () => weatherFn({ data: { city } }),
+    enabled: !!city,
+    staleTime: 30 * 60 * 1000,
+  });
+
+  const totalHours = status.msUntilLadenschluss / 3_600_000;
+  const totalDays = totalHours / 24;
 
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans pb-32">
@@ -56,30 +78,84 @@ function Dashboard() {
 
       <section className="px-5 mb-8">
         <div className="bg-zinc-900 text-white rounded-[20px] p-6 ring-1 ring-black/5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <div
+                className={`size-2 rounded-full ${
+                  status.isSunday ? "bg-zinc-500" : "bg-accent-yellow animate-pulse"
+                }`}
+              />
+              <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
+                {status.isSunday ? "Sonntagsruhe aktiv" : "Ladenschluss"}
+              </span>
+            </div>
             <div
-              className={`size-2 rounded-full ${
-                status.isSunday ? "bg-zinc-500" : "bg-accent-yellow animate-pulse"
-              }`}
-            />
-            <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
-              {status.isSunday ? "Sonntagsruhe aktiv" : "Ladenschluss Countdown"}
-            </span>
+              className="flex items-center rounded-full bg-white/5 ring-1 ring-white/10 p-0.5 text-[10px] font-semibold uppercase tracking-wider"
+              role="group"
+              aria-label="Einheit wählen"
+            >
+              {(["sec", "hours", "days"] as CountdownUnit[]).map((u) => (
+                <button
+                  key={u}
+                  onClick={() => setUnit(u)}
+                  className={`px-2 py-1 rounded-full transition ${
+                    unit === u
+                      ? "bg-accent-yellow text-ink"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {u === "sec" ? "Sek" : u === "hours" ? "Std" : "Tage"}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="font-display text-6xl leading-none">
-              {hydrated ? pad(status.hours) : "--"}
-            </span>
-            <span className="font-display text-4xl text-zinc-500">:</span>
-            <span className="font-display text-6xl leading-none">
-              {hydrated ? pad(status.minutes) : "--"}
-            </span>
-            <span className="font-display text-4xl text-zinc-500">:</span>
-            <span className="font-display text-4xl leading-none text-zinc-500">
-              {hydrated ? pad(status.seconds) : "--"}
-            </span>
+          {unit === "sec" ? (
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-6xl leading-none">
+                {hydrated ? pad(status.hours) : "--"}
+              </span>
+              <span className="font-display text-4xl text-zinc-500">:</span>
+              <span className="font-display text-6xl leading-none">
+                {hydrated ? pad(status.minutes) : "--"}
+              </span>
+              <span className="font-display text-4xl text-zinc-500">:</span>
+              <span className="font-display text-4xl leading-none text-zinc-500">
+                {hydrated ? pad(status.seconds) : "--"}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-6xl leading-none">
+                {hydrated
+                  ? unit === "hours"
+                    ? Math.floor(totalHours).toString()
+                    : totalDays.toFixed(1).replace(".", ",")
+                  : "--"}
+              </span>
+              <span className="font-display text-2xl text-zinc-500">
+                {unit === "hours" ? "Std" : "Tage"}
+              </span>
+            </div>
+          )}
+          <div className="mt-4 flex items-center gap-2 text-xs text-zinc-400">
+            {weather.data ? (
+              <>
+                <span>
+                  {weather.data.vibe === "sunny"
+                    ? "☀︎"
+                    : weather.data.vibe === "rainy"
+                      ? "☂"
+                      : "☁"}
+                </span>
+                <span>
+                  {weather.data.tempMax}° · {weather.data.summary} · {weather.data.city}
+                </span>
+              </>
+            ) : (
+              <span>Wetter wird geladen …</span>
+            )}
           </div>
-          <p className="mt-4 text-sm text-zinc-400 max-w-[35ch] text-pretty">
+          <p className="mt-3 text-sm text-zinc-400 max-w-[35ch] text-pretty">
             {status.isSunday
               ? "Ruhezeit bis Montag früh. Kein Rasenmähen, kein Bohren, kein Waschen."
               : "Bis Samstag 20:00 Uhr haben die meisten Supermärkte geöffnet. Danach beginnt die große Sonntagsruhe."}
