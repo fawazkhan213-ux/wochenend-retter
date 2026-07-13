@@ -7,8 +7,7 @@ import { LocateFixed, MapPin, Navigation, Search } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { getSundayWeather } from "@/lib/weather.functions";
-import { searchNearbyPlaces, searchTextPlaces } from "@/lib/places.functions";
-import { geocodeCity } from "@/lib/places.functions";
+import { searchNearbyPlaces, searchTextPlaces, geocodeCity } from "@/lib/places.functions";
 import { MapPreview } from "@/components/MapPreview";
 import {
   distanceMeters,
