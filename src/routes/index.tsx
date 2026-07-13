@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { ChevronDown } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SUNDAY_CATEGORIES } from "@/lib/sunday-data";
@@ -42,6 +43,38 @@ function Dashboard() {
     "sec",
   );
   const [city] = useLocalStorage<string>("sonntag.city", "Berlin");
+  const [recentCategories, setRecentCategories] = useLocalStorage<string[]>(
+    "sonntag.recentCategories",
+    [],
+  );
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  const orderedCategories = useMemo(() => {
+    const seen = new Set<string>();
+    const ordered: typeof SUNDAY_CATEGORIES = [];
+    for (const id of recentCategories) {
+      const cat = SUNDAY_CATEGORIES.find((c) => c.id === id);
+      if (cat && !seen.has(cat.id)) {
+        ordered.push(cat);
+        seen.add(cat.id);
+      }
+    }
+    for (const cat of SUNDAY_CATEGORIES) {
+      if (!seen.has(cat.id)) ordered.push(cat);
+    }
+    return ordered;
+  }, [recentCategories]);
+
+  const visibleCategories = showAllCategories
+    ? orderedCategories
+    : orderedCategories.slice(0, 2);
+
+  const trackCategory = (id: string) => {
+    setRecentCategories((prev) => {
+      const next = [id, ...prev.filter((x) => x !== id)];
+      return next.slice(0, 6);
+    });
+  };
 
   const weatherFn = useServerFn(getSundayWeather);
   const weather = useQuery({
@@ -215,18 +248,19 @@ function Dashboard() {
       <section className="px-5 mb-10">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
-            Sonntag offen
+            {recentCategories.length > 0 ? "Zuletzt geöffnet" : "Sonntag offen"}
           </h3>
           <Link to="/open-sunday" className="text-xs text-ink/60 hover:text-ink">
             alle →
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {SUNDAY_CATEGORIES.slice(0, 6).map((cat) => (
+          {visibleCategories.map((cat) => (
             <Link
               key={cat.id}
               to="/open-sunday"
               hash={cat.id}
+              onClick={() => trackCategory(cat.id)}
               className="bg-white p-4 rounded-xl ring-1 ring-black/5 flex flex-col gap-3 hover:ring-black/10 transition"
             >
               <div className="size-8 bg-zinc-50 rounded-lg flex items-center justify-center ring-1 ring-black/5 font-display italic text-lg">
@@ -241,6 +275,21 @@ function Dashboard() {
             </Link>
           ))}
         </div>
+        {orderedCategories.length > 2 && (
+          <div className="mt-3 flex justify-center">
+            <button
+              onClick={() => setShowAllCategories((s) => !s)}
+              className="flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-ink px-3 py-1.5 rounded-full bg-white ring-1 ring-black/5"
+            >
+              {showAllCategories ? "Weniger" : "Mehr anzeigen"}
+              <ChevronDown
+                className={`size-3 transition-transform ${
+                  showAllCategories ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="px-5">
@@ -249,8 +298,8 @@ function Dashboard() {
           className="block bg-zinc-100 rounded-[20px] overflow-hidden ring-1 ring-black/5"
         >
           <img
-            src={sundayImage}
-            alt="Neblige Morgendämmerung im Park"
+            src={planCardImage}
+            alt="Sonntagsstillleben mit Buch und Kaffee"
             width={1200}
             height={600}
             loading="lazy"
@@ -273,4 +322,4 @@ function Dashboard() {
   );
 }
 
-import sundayImage from "@/assets/sonntag-park.jpg";
+import planCardImage from "@/assets/sonntag-plan-card.jpg";
