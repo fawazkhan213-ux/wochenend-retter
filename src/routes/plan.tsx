@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { getSundayWeather } from "@/lib/weather.functions";
 import { searchNearbyPlaces, searchTextPlaces } from "@/lib/places.functions";
+import { geocodeCity } from "@/lib/places.functions";
 import { MapPreview } from "@/components/MapPreview";
 import {
   distanceMeters,
@@ -43,6 +44,22 @@ function PlanPage() {
   const [draft, setDraft] = useState("");
   const [placeQuery, setPlaceQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [fallbackLoading, setFallbackLoading] = useState(false);
+  const [fallbackError, setFallbackError] = useState<string | null>(null);
+  const geocodeFn = useServerFn(geocodeCity);
+
+  async function useCityAsLocation() {
+    setFallbackLoading(true);
+    setFallbackError(null);
+    try {
+      const res = await geocodeFn({ data: { city } });
+      geo.setCoords({ lat: res.lat, lng: res.lng });
+    } catch (e) {
+      setFallbackError(e instanceof Error ? e.message : "Fehler beim Geocoding");
+    } finally {
+      setFallbackLoading(false);
+    }
+  }
 
   // Scope the outing color palette to this route only.
   useEffect(() => {
@@ -237,13 +254,28 @@ function PlanPage() {
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500 flex flex-col items-center gap-3">
             <MapPin className="size-6 text-accent-yellow" />
             <p>Standort teilen, um Parks, Museen und Cafés in deiner Nähe zu finden.</p>
+            {geo.error && (
+              <p className="text-xs text-red-600 -mt-1">{geo.error}</p>
+            )}
             <button
               onClick={geo.request}
               disabled={geo.loading}
               className="mt-1 bg-ink text-canvas rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50"
             >
-              Standort teilen
+              {geo.loading ? "Warte auf Standort …" : "Standort teilen"}
             </button>
+            <button
+              onClick={useCityAsLocation}
+              disabled={fallbackLoading}
+              className="text-xs underline text-zinc-600 disabled:opacity-50"
+            >
+              {fallbackLoading
+                ? "Suche Koordinaten …"
+                : `Stattdessen ${city} als Standort verwenden`}
+            </button>
+            {fallbackError && (
+              <p className="text-xs text-red-600">{fallbackError}</p>
+            )}
           </div>
         )}
 
