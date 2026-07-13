@@ -114,3 +114,64 @@ export const searchNearbyPlaces = createServerFn({ method: "POST" })
     const json = (await response.json()) as PlacesResponse;
     return normalize(json);
   });
+
+const TEXT_GATEWAY_URL =
+  "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText";
+
+export const searchTextPlaces = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: {
+      query: string;
+      lat?: number;
+      lng?: number;
+      radius?: number;
+      maxResults?: number;
+      languageCode?: string;
+    }) => {
+      if (typeof data.query !== "string" || !data.query.trim()) {
+        throw new Error("query required");
+      }
+      return data;
+    },
+  )
+  .handler(async ({ data }) => {
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const gmKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!lovableKey || !gmKey) {
+      throw new Error("Google Maps connector credentials missing");
+    }
+
+    const body: Record<string, unknown> = {
+      textQuery: data.query.trim(),
+      maxResultCount: Math.min(Math.max(data.maxResults ?? 5, 1), 10),
+      languageCode: data.languageCode ?? "de",
+    };
+    if (typeof data.lat === "number" && typeof data.lng === "number") {
+      body.locationBias = {
+        circle: {
+          center: { latitude: data.lat, longitude: data.lng },
+          radius: Math.min(Math.max(data.radius ?? 5000, 100), 50000),
+        },
+      };
+    }
+
+    const response = await fetch(TEXT_GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": gmKey,
+        "Content-Type": "application/json",
+        "X-Goog-FieldMask": FIELD_MASK,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`Places searchText failed [${response.status}]: ${errText}`);
+      throw new Error(`Places request failed [${response.status}]`);
+    }
+
+    const json = (await response.json()) as PlacesResponse;
+    return normalize(json);
+  });
