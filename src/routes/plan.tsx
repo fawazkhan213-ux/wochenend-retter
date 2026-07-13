@@ -2,11 +2,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { LocateFixed, MapPin, Navigation } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { ACTIVITIES } from "@/lib/sunday-data";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { getSundayWeather } from "@/lib/weather.functions";
+import { searchNearbyPlaces } from "@/lib/places.functions";
+import {
+  distanceMeters,
+  formatDistance,
+  mapsSearchUrl,
+  useGeolocation,
+  type Coords,
+} from "@/lib/geolocation";
 import sundayImage from "@/assets/sonntag-park.jpg";
 
 export const Route = createFileRoute("/plan")({
@@ -29,11 +38,15 @@ export const Route = createFileRoute("/plan")({
 });
 
 function PlanPage() {
+  const geo = useGeolocation();
   const [city, setCity] = useLocalStorage<string>("sonntag.city", "Berlin");
   const [draft, setDraft] = useState("");
   const [savedPlan, setSavedPlan] = useLocalStorage<string | null>(
     "sonntag.savedPlan",
     null,
+  );
+  const [nearbyKind, setNearbyKind] = useState<"museum" | "movie_theater">(
+    "museum",
   );
 
   const weatherFn = useServerFn(getSundayWeather);
@@ -43,6 +56,33 @@ function PlanPage() {
     enabled: !!city,
     staleTime: 30 * 60 * 1000,
   });
+
+  const placesFn = useServerFn(searchNearbyPlaces);
+  const places = useQuery({
+    queryKey: ["plan-nearby", nearbyKind, geo.coords?.lat, geo.coords?.lng],
+    queryFn: () =>
+      placesFn({
+        data: {
+          lat: geo.coords!.lat,
+          lng: geo.coords!.lng,
+          includedTypes: [nearbyKind],
+          radius: 5000,
+          maxResults: 10,
+        },
+      }),
+    enabled: !!geo.coords,
+    staleTime: 15 * 60 * 1000,
+  });
+
+  const withDistance = useMemo(() => {
+    if (!places.data || !geo.coords) return [];
+    return places.data
+      .map((p) => ({
+        ...p,
+        distance: distanceMeters(geo.coords as Coords, { lat: p.lat, lng: p.lng }),
+      }))
+      .sort((a, b) => a.distance - b.distance);
+  }, [places.data, geo.coords]);
 
   const vibe = query.data?.vibe ?? "any";
   const suggestions = useMemo(
@@ -121,6 +161,81 @@ function PlanPage() {
             Setzen
           </button>
         </form>
+      </section>
+
+      {/* Nearby museums / cinemas */}
+      <section className="px-5 mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
+            In deiner Nähe
+          </h3>
+          <button
+            onClick={geo.request}
+            disabled={geo.loading}
+            className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-white ring-1 ring-black/5 flex items-center gap-1 disabled:opacity-50"
+          >
+            <LocateFixed className="size-3" />
+            {geo.coords ? "Aktualisieren" : "Standort"}
+          </button>
+        </div>
+
+        <div className="flex gap-2 mb-3">
+          {(["museum", "movie_theater"] as const).map((k) => {
+            const label = k === "museum" ? "Museen" : "Kinos";
+            const isActive = nearbyKind === k;
+            return (
+              <button
+                key={k}
+                onClick={() => setNearbyKind(k)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium ring-1 transition ${
+                  isActive
+                    ? "bg-ink text-canvas ring-ink"
+                    : "bg-white text-ink ring-black/5"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {!geo.coords && (
+          <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500 flex flex-col items-center gap-2">
+            <MapPin className="size-5 text-zinc-400" />
+            Standort teilen, um Museen und Kinos in deiner Nähe zu sehen.
+          </div>
+        )}
+
+        {geo.coords && places.isLoading && (
+          <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500">
+            Suche…
+          </div>
+        )}
+
+        {geo.coords && withDistance.length > 0 && (
+          <ul className="bg-white rounded-2xl ring-1 ring-black/5 divide-y divide-zinc-100">
+            {withDistance.map((p) => (
+              <li key={p.id} className="px-4 py-3 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{p.name}</div>
+                  <div className="text-xs text-zinc-500 truncate">{p.address}</div>
+                  <div className="text-xs text-zinc-400 mt-0.5">
+                    {formatDistance(p.distance)}
+                    {p.openNow === true ? " · offen" : p.openNow === false ? " · geschlossen" : ""}
+                  </div>
+                </div>
+                <a
+                  href={p.mapsUri || mapsSearchUrl(p.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1 shrink-0"
+                >
+                  <Navigation className="size-3" /> Route
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="px-5">

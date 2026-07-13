@@ -4,6 +4,7 @@ export type SundayCategory = {
   glyph: string;
   hint: string;
   detail: string;
+  placeTypes: string[];
 };
 
 export const SUNDAY_CATEGORIES: SundayCategory[] = [
@@ -14,6 +15,7 @@ export const SUNDAY_CATEGORIES: SundayCategory[] = [
     hint: "Meist bis spät",
     detail:
       "Getränke, Snacks, Zigaretten, oft auch Kondome und Kaugummi. Vor allem in Berlin, Leipzig, Hamburg.",
+    placeTypes: ["convenience_store"],
   },
   {
     id: "tankstelle",
@@ -22,6 +24,7 @@ export const SUNDAY_CATEGORIES: SundayCategory[] = [
     hint: "24/7 Notfall",
     detail:
       "Milch, Brot, Süßigkeiten, überteuert aber offen. Der klassische Sonntagsretter.",
+    placeTypes: ["gas_station"],
   },
   {
     id: "bahnhof",
@@ -30,6 +33,7 @@ export const SUNDAY_CATEGORIES: SundayCategory[] = [
     hint: "Bis 22:00",
     detail:
       "Rewe, Edeka oder Kaisers in großen Bahnhöfen. Volles Sortiment, meist 06:00–22:00, auch sonntags.",
+    placeTypes: ["train_station"],
   },
   {
     id: "baeckerei",
@@ -38,6 +42,7 @@ export const SUNDAY_CATEGORIES: SundayCategory[] = [
     hint: "Bis Mittag",
     detail:
       "Sonntagsbrötchen! Die meisten Bäckereien öffnen 07:00–12:00. Am besten früh aufstehen.",
+    placeTypes: ["bakery"],
   },
   {
     id: "apotheke",
@@ -46,6 +51,7 @@ export const SUNDAY_CATEGORIES: SundayCategory[] = [
     hint: "Wechselnd",
     detail:
       "Immer eine Apotheke im Notdienst. Aushang an jeder Apotheke oder online über die Apothekerkammer.",
+    placeTypes: ["pharmacy"],
   },
   {
     id: "blumen",
@@ -54,6 +60,7 @@ export const SUNDAY_CATEGORIES: SundayCategory[] = [
     hint: "Meist offen",
     detail:
       "Der klassische Sonntags-Handel — als Ausnahme in der Ladenschlussregel. Perfekt für den Besuch bei den Schwiegereltern.",
+    placeTypes: ["florist"],
   },
 ];
 
