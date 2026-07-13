@@ -1,58 +1,66 @@
+# Plan — Sonntagsruhe Planner: v3 features
 
-# Sonntagsruhe Planner
+## 1. Dashboard countdown box — unit toggle + weather
 
-A mobile-first web app that helps people in Germany survive the "everything is closed on Sunday" reality: plan your Saturday shop, find what IS open on Sunday (Spätis, Tankstellen, Bahnhof-Rewe, Bäckereien), and get inspiration for Sunday activities.
+- Keep the current black card + display type. Add two small controls in the top-right:
+  - **Unit toggle**: `Sek · Std · Tage` (segmented pill). Persist choice in `localStorage`.
+    - `Sek` (default): keep current `HH:MM:SS`
+    - `Std`: single big number = total hours remaining
+    - `Tage`: single big number = days remaining (decimal like "2,3")
+- **Weather chip** below the countdown, inside the same card: small row like `☀︎ 14° · leicht bewölkt · Berlin`. Reuse existing `getSundayWeather` server fn and the persisted `sonntag.city`. Falls back to "—" while loading. Muted zinc-400 text so it doesn't fight the numbers.
 
-## Core features (v1)
+## 2. Shopping — AI item suggestions from history
 
-1. **Saturday Shopping List**
-   - Add items you'll need for the weekend, grouped by category (Frühstück, Abendessen, Getränke, Haushalt).
-   - "Panic score" that grows as Saturday afternoon approaches and items are still unchecked.
-   - Quick-add presets: "Brunch für 4", "Grillabend", "Netflix-Abend".
+- Track every added item in a new `sonntag.itemHistory` localStorage: `{ text, count, lastAt }`.
+- Below the "add item" input in `/shopping`, show up to 5 chips: `häufig gekauft` — the top items by count (excluding items already on the active list). Tap → adds to the active list.
+- Use Lovable AI (`google/gemini-3-flash-preview`) via a new `suggestItems` server fn: given the history + current list, returns 3 smart contextual suggestions ("You bought Milch 4× in last 3 weeks — nachfüllen?"). Show as a separate "Vorschläge" strip with a subtle sparkle icon. Cache result for 10 min per list.
 
-2. **Sunday Open Now**
-   - Curated list of place types that are typically open on Sunday: Spätis, Tankstellen, Bahnhof-Supermärkte, Bäckereien (Sonntagsbrötchen), Apotheken-Notdienst, Blumenläden.
-   - User adds their city; app shows category tiles with tips ("Bahnhof Rewe: bis 22 Uhr, meist teurer").
-   - Users can save personal favorites ("mein Späti um die Ecke").
+## 3. Party popper when list is complete
 
-3. **Sunday Activity Planner**
-   - Weather-aware suggestions (sunny → Park, Biergarten, Flohmarkt; rainy → Museum, Café, Kino, Brettspiele).
-   - Curated Sunday-friendly ideas: Spaziergang, Tatort um 20:15, Brunch, Wandern, Museums-Sonntag.
-   - Save a plan for the upcoming Sunday.
+- When the active list transitions from "at least one open" → "all done AND at least 1 item", fire a one-shot confetti burst (canvas-confetti or a small inline SVG-particles component — no dependency needed, ~40 lines).
+- Also show a small toast/banner: `Alles erledigt für diese Woche 🎉`.
+- Track a `celebratedListId` in state so it only fires once per completion event.
 
-4. **Weekend Dashboard (home)**
-   - Countdown to "Ladenschluss Samstag" (Saturday 20:00 for most Bundesländer).
-   - Today's status: "Es ist Sonntag — Ruhetag" with quick access to what's open + your plan.
-   - Ruhezeiten reminder card (no laundry, no drilling on Sundays).
+## 4. Prices + total + AI price memory
 
-## Out of scope for v1
+- Extend `ShoppingItem` with optional `price?: number` (EUR).
+- Each row gets a compact price input (`0,00 €`, right-aligned, ~72px wide).
+- Sticky footer above the bottom nav on `/shopping`: **Summe: 12,40 €** — sum of all items with a price.
+- **Price memory**: new `sonntag.priceMemory` localStorage `{ [normalizedText]: { avg, last, count } }`. Update whenever a user sets a price. When adding a new item, prefill the price with the remembered average (rounded to nearest 0,10 €). Small "≈" prefix indicates it's a remembered guess until edited.
+- Keep purely client-side; no server calls needed for price memory (AI feature only for suggestions in step 2).
 
-- No real-time store hours API integration (curated categories + user-added favorites instead).
-- No accounts / cloud sync — everything stored locally in the browser.
-- No maps integration (can be added later).
+## 5. Plan section — outing color palette
 
-## Technical approach
+- Introduce a `data-theme="outing"` scope on the `/plan` root wrapper that overrides CSS variables locally in `src/styles.css`:
+  - `--canvas`: warm sunlit cream (`oklch(0.97 0.03 90)`)
+  - `--ink`: deep forest (`oklch(0.28 0.06 155)`)
+  - Accent: golden-orange (`oklch(0.78 0.16 65)`)
+  - Card surface: white with a faint peach tint
+- Replace the dark misty park hero image with a bright outdoor illustration (generate new asset — sun-drenched meadow / picnic vibe, flat Bauhaus style).
+- Update cards on `/plan` to use the new surface + accent so the whole page reads as "let's go outside", not "quiet ruin".
+- Other routes stay on the original canvas.
 
-- **Stack**: TanStack Start (already scaffolded), Tailwind v4, shadcn components.
-- **Routes**:
-  - `/` — Weekend Dashboard with countdown + status card.
-  - `/shopping` — Saturday shopping list with categories + presets.
-  - `/open-sunday` — Category tiles + user favorites.
-  - `/plan` — Sunday activity planner with weather-based suggestions.
-  - Each route gets its own `head()` with unique title + description.
-- **State**: `localStorage` (shopping items, favorites, saved Sunday plans, city). Read inside `useEffect` to avoid SSR hydration mismatches.
-- **Weather**: free Open-Meteo API (no key needed) called from a `createServerFn`, keyed by city → lat/lon via their geocoding endpoint.
-- **Time logic**: small util that returns `{ weekday, hoursUntilLadenschluss, isSonntag }` used by the dashboard.
-- **Design direction**: warm, cozy, slightly playful German-feel — think Sunday morning light, Brötchen, a bit of Tatort dusk. I'll generate 3 design directions before building so you can pick the vibe.
+## 6. Places to visit nearby (replaces current "In deiner Nähe" block)
 
-## Build order
+- Remove the museum/cinema toggle + list on `/plan`.
+- Add a dedicated **"Orte in deiner Nähe"** section:
+  - One "Standort teilen" CTA if no coords.
+  - Once we have coords: fetch a mixed set (park, museum, cafe, tourist_attraction) via existing `searchNearbyPlaces` — one call, `includedTypes` = all four.
+  - Show as a horizontally-scrollable card row: each card = name, category glyph, distance, "Route öffnen" → opens Google Maps directions (`https://www.google.com/maps/dir/?api=1&destination=lat,lng`), using existing `mapsSearchUrl`/we already have `mapsUri` from the server fn.
+- Same section replaces the earlier removed UI; nothing else on the page depends on the old museum toggle.
 
-1. Generate 3 design directions → you pick one.
-2. Set up routes, shared layout, nav, metadata.
-3. Weekend Dashboard with live countdown.
-4. Shopping list with presets + panic score.
-5. Open-on-Sunday categories + favorites.
-6. Sunday planner with Open-Meteo weather + suggestions.
-7. Polish: empty states, mobile nav, small delight animations.
+## 7. Technical notes
 
-Approve this and I'll start with the design directions.
+- New files:
+  - `src/lib/itemHistory.ts` (history + price memory helpers)
+  - `src/lib/suggestions.functions.ts` (Lovable AI server fn)
+  - `src/components/Confetti.tsx` (dependency-free particle burst)
+- Edits:
+  - `src/routes/index.tsx` — unit toggle, weather chip
+  - `src/routes/shopping.tsx` — history chips, AI suggestions, prices, total, confetti
+  - `src/routes/plan.tsx` — outing theme wrapper, new Places section, remove old nearby block
+  - `src/styles.css` — `[data-theme="outing"]` overrides
+  - `src/assets/` — new bright outdoor hero image (generated)
+- No schema changes, no Cloud needed for this batch. Google Maps + Lovable AI Gateway are already connected.
+
+Ready to build on approval.

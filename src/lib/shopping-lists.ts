@@ -1,4 +1,9 @@
-export type ShoppingItem = { id: string; text: string; done: boolean };
+export type ShoppingItem = {
+  id: string;
+  text: string;
+  done: boolean;
+  price?: number; // EUR, optional per-item price
+};
 
 export type ShoppingList = {
   id: string;
@@ -37,7 +42,17 @@ export function getActiveList(
 export function formatListForShare(list: ShoppingList): string {
   const header = list.tag ? `${list.name} (${list.tag})` : list.name;
   const body = list.items
-    .map((i) => `${i.done ? "✓" : "•"} ${i.text}`)
+    .map(
+      (i) =>
+        `${i.done ? "✓" : "•"} ${i.text}${
+          typeof i.price === "number" ? ` — ${i.price.toFixed(2)} €` : ""
+        }`,
+    )
     .join("\n");
-  return `${header}\n\n${body || "(leer)"}\n\n— Sonntagsruhe Planner`;
+  const total = list.items.reduce(
+    (sum, i) => sum + (typeof i.price === "number" ? i.price : 0),
+    0,
+  );
+  const footer = total > 0 ? `\nSumme: ${total.toFixed(2)} €` : "";
+  return `${header}\n\n${body || "(leer)"}${footer}\n\n— Sonntagsruhe Planner`;
 }

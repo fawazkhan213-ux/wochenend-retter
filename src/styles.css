@@ -156,3 +156,10 @@
     color: var(--color-foreground);
   }
 }
+
+/* Outing theme — scoped to the /plan page. Warm, sunlit palette. */
+[data-theme="outing"] {
+  --canvas: oklch(0.97 0.03 90);
+  --ink: oklch(0.3 0.06 155);
+  --accent-yellow: oklch(0.82 0.16 65);
+}
