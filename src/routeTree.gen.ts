@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as PlanRouteImport } from './routes/plan'
 import { Route as OpenSundayRouteImport } from './routes/open-sunday'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ShoppingRoute = ShoppingRouteImport.update({
   id: '/shopping',
   path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanRoute = PlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OpenSundayRoute = OpenSundayRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/open-sunday': typeof OpenSundayRoute
+  '/plan': typeof PlanRoute
   '/shopping': typeof ShoppingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/open-sunday': typeof OpenSundayRoute
+  '/plan': typeof PlanRoute
   '/shopping': typeof ShoppingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/open-sunday': typeof OpenSundayRoute
+  '/plan': typeof PlanRoute
   '/shopping': typeof ShoppingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/open-sunday' | '/shopping'
+  fullPaths: '/' | '/open-sunday' | '/plan' | '/shopping'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/open-sunday' | '/shopping'
-  id: '__root__' | '/' | '/open-sunday' | '/shopping'
+  to: '/' | '/open-sunday' | '/plan' | '/shopping'
+  id: '__root__' | '/' | '/open-sunday' | '/plan' | '/shopping'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OpenSundayRoute: typeof OpenSundayRoute
+  PlanRoute: typeof PlanRoute
   ShoppingRoute: typeof ShoppingRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/shopping'
       fullPath: '/shopping'
       preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/open-sunday': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OpenSundayRoute: OpenSundayRoute,
+  PlanRoute: PlanRoute,
   ShoppingRoute: ShoppingRoute,
 }
 export const routeTree = rootRouteImport
