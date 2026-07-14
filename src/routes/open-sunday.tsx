@@ -308,6 +308,12 @@ function OpenSundayPage() {
         <h1 className="text-2xl font-medium tracking-tight text-balance">
           Was in deiner Nähe trotzdem aufhat.
         </h1>
+        <Link
+          to="/verkaufsoffene-sonntage"
+          className="inline-block mt-3 text-xs font-semibold uppercase tracking-wider text-ink underline"
+        >
+          Verkaufsoffene Sonntage 2026 →
+        </Link>
       </header>
 
       {/* Location banner */}
