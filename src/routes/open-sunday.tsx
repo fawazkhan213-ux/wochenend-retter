@@ -343,6 +343,83 @@ function OpenSundayPage() {
       </section>
 
       {/* Category tabs */}
+      {/* Store search */}
+      <section className="px-5 mb-4">
+        <div className="bg-white rounded-2xl ring-1 ring-black/5 p-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Search className="size-4 text-zinc-400 ml-1" />
+            <input
+              value={storeQuery}
+              onChange={(e) => setStoreQuery(e.target.value)}
+              placeholder="Laden suchen — z.B. Lidl, Apotheke, Späti"
+              className="flex-1 bg-transparent text-sm py-2 focus:outline-none placeholder:text-zinc-400"
+            />
+            {storeQuery && (
+              <button
+                onClick={() => setStoreQuery("")}
+                className="text-xs text-zinc-400 px-2"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {debouncedStoreQuery.length >= 2 && !geo.coords && (
+            <div className="text-xs text-zinc-500 px-2 pb-2 pt-1">
+              Standort freigeben, um in deiner Nähe zu suchen.
+            </div>
+          )}
+          {debouncedStoreQuery.length >= 2 && geo.coords && (
+            <div className="mt-2 border-t border-zinc-100 pt-2">
+              {storeSearch.isLoading && (
+                <div className="text-xs text-zinc-500 px-2 py-3">
+                  Suche „{debouncedStoreQuery}“ in deiner Nähe …
+                </div>
+              )}
+              {!storeSearch.isLoading && rankedStoreSearch.length === 0 && (
+                <div className="text-xs text-zinc-500 px-2 py-3">
+                  Keine Treffer im 5-km-Umkreis.
+                </div>
+              )}
+              {rankedStoreSearch.length > 0 && (
+                <ul className="divide-y divide-zinc-100">
+                  {rankedStoreSearch.map((p) => (
+                    <li key={p.id} className="px-2 py-2 flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium truncate">{p.name}</span>
+                          {p.openNow === true && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                              offen
+                            </span>
+                          )}
+                          {p.openNow === false && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
+                              geschlossen
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-zinc-500 truncate">{p.address}</div>
+                        <div className="text-xs text-zinc-400 mt-0.5">
+                          {formatDistance(p.distance)}
+                        </div>
+                      </div>
+                      <a
+                        href={p.mapsUri || mapsSearchUrl(p.name)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1 shrink-0"
+                      >
+                        <Navigation className="size-3" /> Route
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
       <section className="px-5 mb-4">
         <div className="flex gap-2 overflow-x-auto px-1 pb-2 no-scrollbar">
           {SUNDAY_CATEGORIES.map((c) => {
