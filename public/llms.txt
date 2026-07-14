@@ -10,3 +10,4 @@ Wochenend-Retter ist eine installierbare Web-App (PWA), die Menschen in Deutschl
 - [Einkaufsliste](/shopping): Einkaufslisten mit Tags anlegen und verwalten.
 - [Sonntagsplan](/plan): Wetterabhängige Vorschläge und Orte in deiner Nähe für den Sonntag.
 - [Sonntags offen](/open-sunday): Läden und Orte finden, die am Sonntag in Deutschland geöffnet haben.
+- [Verkaufsoffene Sonntage](/verkaufsoffene-sonntage): Ratgeber zu verkaufsoffenen Sonntagen 2026 in NRW, Berlin und Hamburg.
