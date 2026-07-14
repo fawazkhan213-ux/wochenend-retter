@@ -245,7 +245,8 @@ function OpenSundayPage() {
               {geo.error
                 ? geo.error
                 : geo.coords
-                  ? `${geo.coords.lat.toFixed(3)}, ${geo.coords.lng.toFixed(3)}`
+                  ? placeLabel.data?.label ??
+                    (placeLabel.isLoading ? "Ort wird erkannt …" : `${geo.coords.lat.toFixed(3)}, ${geo.coords.lng.toFixed(3)}`)
                   : "Google Maps zeigt Läden im Umkreis von 2,5 km."}
             </div>
           </div>
