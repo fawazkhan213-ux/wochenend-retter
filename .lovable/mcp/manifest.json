@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "sdk_version": "0.21.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://riuzjsrkvecawxjovddq.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "wochenend-retter-mcp",
+      "version": "0.1.0",
+      "title": "Wochenend-Retter"
+    },
+    "tools": [
+      {
+        "name": "get_profile",
+        "title": "Get my Wochenend-Retter profile",
+        "description": "Return the signed-in user's Wochenend-Retter profile (display name, email, user id).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_deleted_lists",
+        "title": "List recently deleted shopping lists",
+        "description": "Return the signed-in user's shopping lists that were deleted in the last 30 days and can still be restored in Wochenend-Retter.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "find_open_stores_nearby",
+        "title": "Find stores open now near a location",
+        "description": "Search stores (supermarkets, bakeries, kiosks, petrol stations) near coordinates in Germany and report which are open right now. Useful for planning a Sunday run.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90,
+              "description": "Latitude in decimal degrees."
+            },
+            "longitude": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180,
+              "description": "Longitude in decimal degrees."
+            },
+            "radiusMeters": {
+              "description": "Search radius in meters (default 3000).",
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 50000
+            },
+            "query": {
+              "description": "Optional store name filter to prefer, e.g. 'REWE', 'Bäckerei'.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
