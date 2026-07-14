@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /account
+Disallow: /auth
+Disallow: /mcp
+Disallow: /.mcp/
+Disallow: /.well-known/
+Disallow: /.lovable/
+
+Sitemap: https://wochenend-retter.lovable.app/sitemap.xml

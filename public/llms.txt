@@ -1,0 +1,12 @@
+# Wochenend-Retter
+
+> Dein Wochenend-Retter für Deutschland: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — damit nichts vergessen wird.
+
+Wochenend-Retter ist eine installierbare Web-App (PWA), die Menschen in Deutschland dabei hilft, das Wochenende zu planen: rechtzeitig einkaufen bevor die Läden am Samstag schließen, Einkaufslisten führen, und am Sonntag Orte finden, die trotz Sonntagsruhe geöffnet haben (Bäckereien, Tankstellen, Cafés, Restaurants, Museen).
+
+## Pages
+
+- [Start](/): Übersicht mit Ladenschluss-Countdown, aktueller Einkaufsliste und Sonntagsplan.
+- [Einkaufsliste](/shopping): Einkaufslisten mit Tags anlegen und verwalten.
+- [Sonntagsplan](/plan): Wetterabhängige Vorschläge und Orte in deiner Nähe für den Sonntag.
+- [Sonntags offen](/open-sunday): Läden und Orte finden, die am Sonntag in Deutschland geöffnet haben.
