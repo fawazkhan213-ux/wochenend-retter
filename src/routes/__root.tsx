@@ -84,11 +84,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — nichts mehr vergessen.",
       },
       { name: "author", content: "Wochenend-Retter" },
-      { property: "og:title", content: "Wochenend-Retter" },
+      { property: "og:title", content: "Wochenend-Retter — Einkauf & Sonntag in Deutschland" },
       {
         property: "og:description",
         content:
-          "Nie wieder Einkauf vergessen: Ladenschluss-Countdown, Einkaufsliste und Sonntag offen.",
+          "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — nichts mehr vergessen.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -97,6 +97,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "Wochenend-Retter" },
+      { name: "twitter:title", content: "Wochenend-Retter — Einkauf & Sonntag in Deutschland" },
+      { name: "twitter:description", content: "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — nichts mehr vergessen." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c55bcfc4-588a-4f31-b387-c9bdfb080a2b" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c55bcfc4-588a-4f31-b387-c9bdfb080a2b" },
     ],
     links: [
       {
