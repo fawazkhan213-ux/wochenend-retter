@@ -104,7 +104,9 @@ function Dashboard() {
             </h1>
           </div>
           <div className="size-10 rounded-full bg-zinc-200 ring-1 ring-black/5 flex items-center justify-center text-sm font-display italic text-zinc-500">
-            So
+            {hydrated
+              ? now.toLocaleDateString("de-DE", { weekday: "short" }).replace(".", "")
+              : "—"}
           </div>
         </div>
       </header>
