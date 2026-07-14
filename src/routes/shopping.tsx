@@ -1,13 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Share2, ListPlus, Check, Sparkles } from "lucide-react";
+import { Plus, Trash2, Share2, ListPlus, Check, Sparkles, Lock } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { Confetti } from "@/components/Confetti";
 import { SHOPPING_PRESETS } from "@/lib/sunday-data";
 import { useLocalStorage } from "@/lib/useLocalStorage";
+import { useAuth } from "@/lib/useAuth";
+import { saveDeletedList } from "@/lib/deleted-lists.functions";
 import {
   formatListForShare,
   getActiveList,
@@ -47,6 +49,9 @@ export const Route = createFileRoute("/shopping")({
 });
 
 function ShoppingPage() {
+  const { isAuthenticated } = useAuth();
+  const saveDeletedFn = useServerFn(saveDeletedList);
+  const [showGuestGate, setShowGuestGate] = useState(false);
   const [lists, setLists] = useLocalStorage<ShoppingList[]>(
     "sonntag.lists",
     [],
@@ -74,6 +79,11 @@ function ShoppingPage() {
   const active = getActiveList(lists, activeId);
 
   const createList = (name: string, tag: string) => {
+    // Soft-block: guests can create up to 2 lists. The 3rd requires an account.
+    if (!isAuthenticated && lists.length >= 2) {
+      setShowGuestGate(true);
+      return null;
+    }
     const list = newList(name, tag);
     setLists((prev) => [...prev, list]);
     setActiveId(list.id);
@@ -85,7 +95,12 @@ function ShoppingPage() {
 
   const ensureActive = (): ShoppingList => {
     if (active) return active;
-    return createList("Standard", "Wocheneinkauf");
+    // ensureActive should always yield a list — bypass the guest cap
+    // for the very first automatic list.
+    const created = newList("Standard", "Wocheneinkauf");
+    setLists((prev) => (prev.length === 0 ? [created] : prev));
+    if (!activeId) setActiveId(created.id);
+    return created;
   };
 
   const updateActive = (updater: (l: ShoppingList) => ShoppingList) => {
@@ -161,8 +176,13 @@ function ShoppingPage() {
   };
 
   const deleteList = (id: string) => {
+    const target = lists.find((l) => l.id === id);
     setLists((prev) => prev.filter((l) => l.id !== id));
     if (activeId === id) setActiveId(null);
+    if (target && isAuthenticated) {
+      // fire-and-forget; the account page reads this back.
+      saveDeletedFn({ data: { list: target } }).catch(() => {});
+    }
   };
 
   const shareActive = async () => {
@@ -238,6 +258,37 @@ function ShoppingPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans pb-32">
       <Confetti trigger={confettiTrigger} />
+      {showGuestGate && (
+        <div className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-canvas rounded-2xl w-full max-w-sm p-6 shadow-xl">
+            <div className="size-10 rounded-full bg-accent-yellow flex items-center justify-center mb-3">
+              <Lock className="size-5" />
+            </div>
+            <h2 className="text-lg font-semibold mb-1">
+              Ab der 3. Liste brauchst du ein Konto
+            </h2>
+            <p className="text-sm text-zinc-500 mb-5">
+              Mit einem kostenlosen Konto erstellst du unbegrenzt viele Listen
+              und kannst gelöschte Listen 30 Tage lang wiederherstellen.
+            </p>
+            <div className="flex gap-2">
+              <Link
+                to="/auth"
+                onClick={() => setShowGuestGate(false)}
+                className="flex-1 bg-ink text-canvas rounded-xl py-2.5 text-sm font-semibold text-center"
+              >
+                Konto erstellen
+              </Link>
+              <button
+                onClick={() => setShowGuestGate(false)}
+                className="px-4 rounded-xl bg-zinc-100 text-sm font-medium"
+              >
+                Später
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="px-5 pt-8 pb-6">
         <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-1">
           Wocheneinkauf

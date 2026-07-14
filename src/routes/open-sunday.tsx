@@ -1,12 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Navigation, Plus, Trash2, LocateFixed } from "lucide-react";
+import { MapPin, Navigation, Plus, Trash2, LocateFixed, Sparkles, UserCircle2 } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SUNDAY_CATEGORIES } from "@/lib/sunday-data";
 import { useLocalStorage } from "@/lib/useLocalStorage";
+import { useAuth } from "@/lib/useAuth";
 import {
   distanceMeters,
   formatDistance,
@@ -67,6 +68,54 @@ function OpenSundayPage() {
   const geocodeFn = useServerFn(geocodeCity);
   const reverseFn = useServerFn(reverseGeocode);
   const textFn = useServerFn(searchTextPlaces);
+  const { isAuthenticated, hydrated } = useAuth();
+
+  // "Usual shopping spot" — derive a preferred brand from what the user
+  // has already saved as favorites. Most-frequent name across all favorites
+  // is the strongest local signal we have without pinging an AI service.
+  const preferredBrand = useMemo(() => {
+    if (favs.length === 0) return null;
+    const freq = new Map<string, number>();
+    for (const f of favs) {
+      const key = f.name.trim().split(/\s+/)[0]?.toLowerCase();
+      if (!key) continue;
+      freq.set(key, (freq.get(key) ?? 0) + 1);
+    }
+    const sorted = [...freq.entries()].sort((a, b) => b[1] - a[1]);
+    return sorted[0]?.[0] ?? null;
+  }, [favs]);
+
+  const preferredPlaces = useQuery({
+    queryKey: [
+      "preferred-brand",
+      preferredBrand,
+      geo.coords?.lat,
+      geo.coords?.lng,
+    ],
+    queryFn: () =>
+      textFn({
+        data: {
+          query: preferredBrand!,
+          lat: geo.coords?.lat,
+          lng: geo.coords?.lng,
+          radius: 5000,
+          maxResults: 4,
+        },
+      }),
+    enabled: !!preferredBrand && !!geo.coords,
+    staleTime: 15 * 60 * 1000,
+  });
+
+  const rankedPreferred = useMemo(() => {
+    if (!preferredPlaces.data || !geo.coords) return [];
+    return [...preferredPlaces.data]
+      .map((p) => ({
+        ...p,
+        distance: distanceMeters(geo.coords as Coords, { lat: p.lat, lng: p.lng }),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 4);
+  }, [preferredPlaces.data, geo.coords]);
 
   // Auto-request the browser location on first visit; if geolocation is
   // unavailable or times out, silently fall back to the saved city.
@@ -377,6 +426,71 @@ function OpenSundayPage() {
         <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4">
           Deine Favoriten
         </h3>
+
+        {hydrated && !isAuthenticated && (
+          <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 mb-4 flex items-start gap-3 shadow-sm">
+            <div className="size-9 rounded-full bg-accent-yellow flex items-center justify-center shrink-0">
+              <UserCircle2 className="size-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold mb-0.5">
+                Favoriten geräteübergreifend sichern
+              </div>
+              <p className="text-xs text-zinc-500 mb-3">
+                Erstelle ein Konto, um Lieblings-Läden zu speichern und überall
+                wieder abzurufen.
+              </p>
+              <Link
+                to="/account"
+                className="inline-block bg-ink text-canvas text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-lg"
+              >
+                Konto erstellen
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {preferredBrand && geo.coords && (
+          <div className="mb-5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 px-1 flex items-center gap-1">
+              <Sparkles className="size-3" /> Dein üblicher Laden ·{" "}
+              <span className="capitalize">{preferredBrand}</span>
+            </p>
+            {preferredPlaces.isLoading && (
+              <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
+                Suche „{preferredBrand}“ in deiner Nähe …
+              </div>
+            )}
+            {!preferredPlaces.isLoading && rankedPreferred.length === 0 && (
+              <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
+                Keine Filialen in 5 km gefunden.
+              </div>
+            )}
+            {rankedPreferred.length > 0 && (
+              <ul className="bg-white rounded-2xl ring-1 ring-black/5 divide-y divide-zinc-100 overflow-hidden">
+                {rankedPreferred.map((p) => (
+                  <li key={p.id} className="px-4 py-3 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{p.name}</div>
+                      <div className="text-xs text-zinc-500 truncate">{p.address}</div>
+                      <div className="text-xs text-zinc-400 mt-0.5">
+                        {formatDistance(p.distance)}
+                      </div>
+                    </div>
+                    <a
+                      href={p.mapsUri || mapsSearchUrl(p.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1 shrink-0"
+                    >
+                      <Navigation className="size-3" /> Route
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <form
           onSubmit={add}
