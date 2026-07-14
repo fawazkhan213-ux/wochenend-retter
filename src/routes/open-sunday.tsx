@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Navigation, Plus, Trash2, LocateFixed, Sparkles, UserCircle2 } from "lucide-react";
+import { MapPin, Navigation, Plus, Trash2, LocateFixed, Sparkles, UserCircle2, Search } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SUNDAY_CATEGORIES } from "@/lib/sunday-data";
@@ -65,6 +65,12 @@ function OpenSundayPage() {
   const [category, setCategory] = useState(SUNDAY_CATEGORIES[0]!.id);
   const [note, setNote] = useState("");
   const [fallbackLoading, setFallbackLoading] = useState(false);
+  const [storeQuery, setStoreQuery] = useState("");
+  const [debouncedStoreQuery, setDebouncedStoreQuery] = useState("");
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedStoreQuery(storeQuery.trim()), 350);
+    return () => window.clearTimeout(t);
+  }, [storeQuery]);
   const geocodeFn = useServerFn(geocodeCity);
   const reverseFn = useServerFn(reverseGeocode);
   const textFn = useServerFn(searchTextPlaces);
@@ -189,6 +195,32 @@ function OpenSundayPage() {
   const cat = SUNDAY_CATEGORIES.find((c) => c.id === activeCat)!;
   const nearbyFn = useServerFn(searchNearbyPlaces);
 
+  const storeSearch = useQuery({
+    queryKey: ["store-search", debouncedStoreQuery, geo.coords?.lat, geo.coords?.lng],
+    queryFn: () =>
+      textFn({
+        data: {
+          query: debouncedStoreQuery,
+          lat: geo.coords?.lat,
+          lng: geo.coords?.lng,
+          radius: 5000,
+          maxResults: 6,
+        },
+      }),
+    enabled: debouncedStoreQuery.length >= 2 && !!geo.coords,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const rankedStoreSearch = useMemo(() => {
+    if (!storeSearch.data || !geo.coords) return [];
+    return [...storeSearch.data]
+      .map((p) => ({
+        ...p,
+        distance: distanceMeters(geo.coords as Coords, { lat: p.lat, lng: p.lng }),
+      }))
+      .sort((a, b) => a.distance - b.distance);
+  }, [storeSearch.data, geo.coords]);
+
   const nearby = useQuery({
     queryKey: ["nearby", activeCat, geo.coords?.lat, geo.coords?.lng],
     queryFn: () =>
@@ -266,7 +298,7 @@ function OpenSundayPage() {
     setFavs((prev) => prev.filter((f) => f.id !== id));
 
   return (
-    <div className="min-h-screen bg-canvas text-ink font-sans pb-32">
+    <div className="min-h-screen bg-canvas text-ink font-sans pb-32 overflow-x-hidden">
       <header className="px-5 pt-8 pb-6">
         <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-1">
           Sonntag in Deutschland
