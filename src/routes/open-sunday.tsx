@@ -344,7 +344,7 @@ function OpenSundayPage() {
 
       {/* Category tabs */}
       <section className="px-5 mb-4">
-        <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-2">
+        <div className="flex gap-2 overflow-x-auto px-1 pb-2 no-scrollbar">
           {SUNDAY_CATEGORIES.map((c) => {
             const isActive = c.id === activeCat;
             return (
