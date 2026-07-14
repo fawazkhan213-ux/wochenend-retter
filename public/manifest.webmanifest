@@ -1,0 +1,16 @@
+{
+  "name": "Sonntagsruhe Planner",
+  "short_name": "Sonntagsruhe",
+  "description": "Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF7F2",
+  "theme_color": "#1F4A3A",
+  "lang": "de",
+  "icons": [
+    { "src": "/app-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
