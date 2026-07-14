@@ -250,7 +250,7 @@ function PlanPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
             Orte in deiner Nähe
-          </h3>
+          </h2>
           <button
             onClick={geo.request}
             disabled={geo.loading}
