@@ -10,6 +10,7 @@ import {
   Trash2,
   UserCircle2,
   X,
+  MessageCircleHeart,
 } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -64,8 +65,45 @@ function AccountPage() {
         <SignedOut />
       )}
 
+      <FeedbackCard />
+
       <BottomNav />
     </div>
+  );
+}
+
+function FeedbackCard() {
+  const subject = encodeURIComponent("Wochenend-Retter · Feedback");
+  const body = encodeURIComponent(
+    "Hi! Mir gefällt an Wochenend-Retter besonders …\n\nVerbesserungsvorschlag:\n\n",
+  );
+  return (
+    <section className="px-5 mb-10">
+      <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <MessageCircleHeart className="size-3.5" /> Feedback
+      </h3>
+      <div className="bg-white rounded-2xl ring-1 ring-black/5 p-5 shadow-sm">
+        <div className="text-sm font-semibold mb-1">Gefällt dir die App?</div>
+        <p className="text-xs text-zinc-500 mb-4">
+          Sag uns, was gut läuft — oder was noch fehlt. Jede Rückmeldung hilft,
+          Wochenend-Retter besser zu machen.
+        </p>
+        <div className="flex gap-2">
+          <a
+            href={`mailto:hallo@wochenend-retter.app?subject=${subject}&body=${body}`}
+            className="flex-1 text-center bg-ink text-canvas rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider"
+          >
+            Feedback senden
+          </a>
+          <a
+            href={`mailto:hallo@wochenend-retter.app?subject=${encodeURIComponent("Wochenend-Retter · Idee")}`}
+            className="flex-1 text-center bg-accent-yellow text-ink rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider"
+          >
+            Idee vorschlagen
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }
 
