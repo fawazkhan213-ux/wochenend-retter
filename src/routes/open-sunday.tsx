@@ -458,7 +458,7 @@ function OpenSundayPage() {
 
       {/* Nearby list */}
       <section className="px-5 mb-10">
-        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">
           In deiner Nähe
         </h3>
 
