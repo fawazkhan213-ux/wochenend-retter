@@ -460,7 +460,7 @@ function OpenSundayPage() {
       <section className="px-5 mb-10">
         <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">
           In deiner Nähe
-        </h3>
+        </h2>
 
         {!geo.coords && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500">
@@ -534,9 +534,9 @@ function OpenSundayPage() {
 
       {/* Favorites */}
       <section className="px-5">
-        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4">
+        <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4">
           Deine Favoriten
-        </h3>
+        </h2>
 
         {hydrated && !isAuthenticated && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 mb-4 flex items-start gap-3 shadow-sm">

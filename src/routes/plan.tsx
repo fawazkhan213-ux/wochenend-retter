@@ -197,7 +197,7 @@ function PlanPage() {
           )}
           <div className="p-5">
             <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium">Wetter in {query.data?.city ?? city}</h4>
+              <h2 className="font-medium">Wetter in {query.data?.city ?? city}</h2>
               <span className="text-sm opacity-70">
                 {query.isLoading
                   ? "…"
@@ -248,7 +248,7 @@ function PlanPage() {
       {/* Places to visit nearby */}
       <section className="px-5 mb-10">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
+          <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
             Orte in deiner Nähe
           </h3>
           <button
