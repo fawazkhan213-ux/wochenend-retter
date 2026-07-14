@@ -1,13 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Trash2, Share2, ListPlus, Check, Sparkles } from "lucide-react";
+import { Plus, Trash2, Share2, ListPlus, Check, Sparkles, Lock } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { Confetti } from "@/components/Confetti";
 import { SHOPPING_PRESETS } from "@/lib/sunday-data";
 import { useLocalStorage } from "@/lib/useLocalStorage";
+import { useAuth } from "@/lib/useAuth";
+import { saveDeletedList } from "@/lib/deleted-lists.functions";
 import {
   formatListForShare,
   getActiveList,
@@ -47,6 +49,9 @@ export const Route = createFileRoute("/shopping")({
 });
 
 function ShoppingPage() {
+  const { isAuthenticated } = useAuth();
+  const saveDeletedFn = useServerFn(saveDeletedList);
+  const [showGuestGate, setShowGuestGate] = useState(false);
   const [lists, setLists] = useLocalStorage<ShoppingList[]>(
     "sonntag.lists",
     [],
@@ -74,6 +79,11 @@ function ShoppingPage() {
   const active = getActiveList(lists, activeId);
 
   const createList = (name: string, tag: string) => {
+    // Soft-block: guests can create up to 2 lists. The 3rd requires an account.
+    if (!isAuthenticated && lists.length >= 2) {
+      setShowGuestGate(true);
+      return null;
+    }
     const list = newList(name, tag);
     setLists((prev) => [...prev, list]);
     setActiveId(list.id);
@@ -85,7 +95,12 @@ function ShoppingPage() {
 
   const ensureActive = (): ShoppingList => {
     if (active) return active;
-    return createList("Standard", "Wocheneinkauf");
+    // ensureActive should always yield a list — bypass the guest cap
+    // for the very first automatic list.
+    const created = newList("Standard", "Wocheneinkauf");
+    setLists((prev) => (prev.length === 0 ? [created] : prev));
+    if (!activeId) setActiveId(created.id);
+    return created;
   };
 
   const updateActive = (updater: (l: ShoppingList) => ShoppingList) => {
@@ -161,8 +176,13 @@ function ShoppingPage() {
   };
 
   const deleteList = (id: string) => {
+    const target = lists.find((l) => l.id === id);
     setLists((prev) => prev.filter((l) => l.id !== id));
     if (activeId === id) setActiveId(null);
+    if (target && isAuthenticated) {
+      // fire-and-forget; the account page reads this back.
+      saveDeletedFn({ data: { list: target } }).catch(() => {});
+    }
   };
 
   const shareActive = async () => {
