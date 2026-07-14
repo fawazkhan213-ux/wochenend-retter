@@ -415,6 +415,55 @@ function OpenSundayPage() {
           </button>
         </form>
 
+        {debouncedName.length >= 2 && geo.coords && (
+          <div className="mb-4">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 px-1">
+              Nächste Treffer für „{debouncedName}“
+            </div>
+            {nameSuggest.isLoading && (
+              <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
+                Suche in deiner Nähe …
+              </div>
+            )}
+            {!nameSuggest.isLoading && rankedSuggest.length === 0 && (
+              <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
+                Keine Treffer im 5-km-Umkreis.
+              </div>
+            )}
+            {rankedSuggest.length > 0 && (
+              <ul className="bg-white rounded-2xl ring-1 ring-black/5 divide-y divide-zinc-100 overflow-hidden">
+                {rankedSuggest.map((p) => (
+                  <li key={p.id} className="px-4 py-3 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{p.name}</div>
+                      <div className="text-xs text-zinc-500 truncate">{p.address}</div>
+                      <div className="text-xs text-zinc-400 mt-0.5">
+                        {formatDistance(p.distance)}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <a
+                        href={p.mapsUri || mapsSearchUrl(p.name)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1"
+                      >
+                        <Navigation className="size-3" /> Route
+                      </a>
+                      <button
+                        onClick={() => saveSuggestion(p)}
+                        className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-accent-yellow text-ink"
+                      >
+                        merken
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
         {favs.length === 0 ? (
           <p className="text-sm text-zinc-500 text-center py-4">
             Noch keine Favoriten. Tippe oben auf <b>merken</b> oder speichere manuell.
