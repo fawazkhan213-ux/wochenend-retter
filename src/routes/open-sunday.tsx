@@ -421,7 +421,7 @@ function OpenSundayPage() {
       </section>
 
       <section className="px-5 mb-4">
-        <div className="flex gap-2 overflow-x-auto px-1 pb-2 no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {SUNDAY_CATEGORIES.map((c) => {
             const isActive = c.id === activeCat;
             return (
