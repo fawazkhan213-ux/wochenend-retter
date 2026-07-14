@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapPin, Navigation, Plus, Trash2, LocateFixed } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -14,7 +14,13 @@ import {
   useGeolocation,
   type Coords,
 } from "@/lib/geolocation";
-import { searchNearbyPlaces, type NearbyPlace } from "@/lib/places.functions";
+import {
+  searchNearbyPlaces,
+  searchTextPlaces,
+  geocodeCity,
+  reverseGeocode,
+  type NearbyPlace,
+} from "@/lib/places.functions";
 
 type Favorite = {
   id: string;
@@ -51,11 +57,85 @@ function newId() {
 
 function OpenSundayPage() {
   const geo = useGeolocation();
+  const [city] = useLocalStorage<string>("sonntag.city", "Berlin");
   const [activeCat, setActiveCat] = useState<string>(SUNDAY_CATEGORIES[0]!.id);
   const [favs, setFavs] = useLocalStorage<Favorite[]>("sonntag.favs", []);
   const [name, setName] = useState("");
   const [category, setCategory] = useState(SUNDAY_CATEGORIES[0]!.id);
   const [note, setNote] = useState("");
+  const [fallbackLoading, setFallbackLoading] = useState(false);
+  const geocodeFn = useServerFn(geocodeCity);
+  const reverseFn = useServerFn(reverseGeocode);
+  const textFn = useServerFn(searchTextPlaces);
+
+  // Auto-request the browser location on first visit; if geolocation is
+  // unavailable or times out, silently fall back to the saved city.
+  useEffect(() => {
+    if (!geo.coords && !geo.loading && !geo.error) {
+      geo.request();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (geo.error && !geo.coords && !fallbackLoading) {
+      setFallbackLoading(true);
+      geocodeFn({ data: { city } })
+        .then((res) => geo.setCoords({ lat: res.lat, lng: res.lng }))
+        .catch(() => {})
+        .finally(() => setFallbackLoading(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geo.error, geo.coords]);
+
+  // Reverse-geocode for a friendly location label instead of raw coordinates.
+  const placeLabel = useQuery({
+    queryKey: ["reverse-geocode", geo.coords?.lat, geo.coords?.lng],
+    queryFn: () =>
+      reverseFn({ data: { lat: geo.coords!.lat, lng: geo.coords!.lng } }),
+    enabled: !!geo.coords,
+    staleTime: 30 * 60 * 1000,
+  });
+
+  // Live suggestions as the user types a favorite (e.g. "lidl") — pulls the
+  // nearest real matches via Google Places, ranked by distance.
+  const [debouncedName, setDebouncedName] = useState("");
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedName(name.trim()), 350);
+    return () => window.clearTimeout(t);
+  }, [name]);
+
+  const nameSuggest = useQuery({
+    queryKey: [
+      "fav-suggest",
+      debouncedName,
+      geo.coords?.lat,
+      geo.coords?.lng,
+    ],
+    queryFn: () =>
+      textFn({
+        data: {
+          query: debouncedName,
+          lat: geo.coords?.lat,
+          lng: geo.coords?.lng,
+          radius: 5000,
+          maxResults: 4,
+        },
+      }),
+    enabled: debouncedName.length >= 2 && !!geo.coords,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const rankedSuggest = useMemo(() => {
+    if (!nameSuggest.data || !geo.coords) return [];
+    return [...nameSuggest.data]
+      .map((p) => ({
+        ...p,
+        distance: distanceMeters(geo.coords as Coords, { lat: p.lat, lng: p.lng }),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 4);
+  }, [nameSuggest.data, geo.coords]);
 
   const cat = SUNDAY_CATEGORIES.find((c) => c.id === activeCat)!;
   const nearbyFn = useServerFn(searchNearbyPlaces);
@@ -117,6 +197,22 @@ function OpenSundayPage() {
     ]);
   };
 
+  const saveSuggestion = (place: NearbyPlace) => {
+    setFavs((prev) => [
+      ...prev,
+      {
+        id: newId(),
+        name: place.name,
+        category,
+        note: place.address,
+        mapsUri: place.mapsUri || mapsSearchUrl(place.name),
+        address: place.address,
+      },
+    ]);
+    setName("");
+    setNote("");
+  };
+
   const remove = (id: string) =>
     setFavs((prev) => prev.filter((f) => f.id !== id));
 
@@ -149,7 +245,8 @@ function OpenSundayPage() {
               {geo.error
                 ? geo.error
                 : geo.coords
-                  ? `${geo.coords.lat.toFixed(3)}, ${geo.coords.lng.toFixed(3)}`
+                  ? placeLabel.data?.label ??
+                    (placeLabel.isLoading ? "Ort wird erkannt …" : `${geo.coords.lat.toFixed(3)}, ${geo.coords.lng.toFixed(3)}`)
                   : "Google Maps zeigt Läden im Umkreis von 2,5 km."}
             </div>
           </div>
@@ -317,6 +414,55 @@ function OpenSundayPage() {
             <Plus className="size-4" /> Favorit speichern
           </button>
         </form>
+
+        {debouncedName.length >= 2 && geo.coords && (
+          <div className="mb-4">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 px-1">
+              Nächste Treffer für „{debouncedName}“
+            </div>
+            {nameSuggest.isLoading && (
+              <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
+                Suche in deiner Nähe …
+              </div>
+            )}
+            {!nameSuggest.isLoading && rankedSuggest.length === 0 && (
+              <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
+                Keine Treffer im 5-km-Umkreis.
+              </div>
+            )}
+            {rankedSuggest.length > 0 && (
+              <ul className="bg-white rounded-2xl ring-1 ring-black/5 divide-y divide-zinc-100 overflow-hidden">
+                {rankedSuggest.map((p) => (
+                  <li key={p.id} className="px-4 py-3 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{p.name}</div>
+                      <div className="text-xs text-zinc-500 truncate">{p.address}</div>
+                      <div className="text-xs text-zinc-400 mt-0.5">
+                        {formatDistance(p.distance)}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <a
+                        href={p.mapsUri || mapsSearchUrl(p.name)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1"
+                      >
+                        <Navigation className="size-3" /> Route
+                      </a>
+                      <button
+                        onClick={() => saveSuggestion(p)}
+                        className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-accent-yellow text-ink"
+                      >
+                        merken
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {favs.length === 0 ? (
           <p className="text-sm text-zinc-500 text-center py-4">

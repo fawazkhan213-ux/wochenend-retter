@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { LocateFixed, MapPin, Navigation, Search } from "lucide-react";
+import { LocateFixed, MapPin, Navigation, Search, Copy } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { useLocalStorage } from "@/lib/useLocalStorage";
@@ -45,7 +45,19 @@ function PlanPage() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [fallbackLoading, setFallbackLoading] = useState(false);
   const [fallbackError, setFallbackError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
   const geocodeFn = useServerFn(geocodeCity);
+
+  function copyToClipboard(text: string, label = "Kopiert") {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopied(label);
+      window.setTimeout(() => setCopied(null), 2000);
+    } catch {
+      setCopied("Kopieren fehlgeschlagen");
+      window.setTimeout(() => setCopied(null), 2000);
+    }
+  }
 
   async function useCityAsLocation() {
     setFallbackLoading(true);
@@ -337,6 +349,18 @@ function PlanPage() {
             >
               <Navigation className="size-3" /> Route
             </a>
+            <button
+              onClick={() =>
+                copyToClipboard(
+                  `${nearestForQuery.name} — ${nearestForQuery.address} (${nearestForQuery.lat}, ${nearestForQuery.lng})`,
+                  "Ort in Zwischenablage",
+                )
+              }
+              className="text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-xl bg-white ring-1 ring-black/10 flex items-center gap-1"
+              aria-label="Standort kopieren"
+            >
+              <Copy className="size-3" />
+            </button>
           </div>
         )}
 
@@ -387,10 +411,21 @@ function PlanPage() {
                   href={directionsUrl(p)}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-auto text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-xl bg-ink text-canvas flex items-center justify-center gap-1"
+                  className="text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-xl bg-ink text-canvas flex items-center justify-center gap-1"
                 >
                   <Navigation className="size-3" /> Route öffnen
                 </a>
+                <button
+                  onClick={() =>
+                    copyToClipboard(
+                      `${p.name} — ${p.address} (${p.lat}, ${p.lng})`,
+                      "Ort in Zwischenablage",
+                    )
+                  }
+                  className="text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-xl bg-white ring-1 ring-black/10 flex items-center justify-center gap-1"
+                >
+                  <Copy className="size-3" /> Kopieren
+                </button>
               </div>
             ))}
           </div>
@@ -412,6 +447,11 @@ function PlanPage() {
       </section>
 
       <BottomNav />
+      {copied && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-ink text-canvas text-xs font-medium px-4 py-2 rounded-full shadow-lg z-50">
+          {copied} — in Zwischenablage kopiert
+        </div>
+      )}
     </div>
   );
 }
