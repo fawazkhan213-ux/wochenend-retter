@@ -1,7 +1,7 @@
 {
-  "name": "Sonntagsruhe Planner",
-  "short_name": "Sonntagsruhe",
-  "description": "Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat.",
+  "name": "Wochenend-Retter",
+  "short_name": "Wochenend-Retter",
+  "description": "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
