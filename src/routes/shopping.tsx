@@ -259,7 +259,7 @@ function ShoppingPage() {
     <div className="min-h-screen bg-canvas text-ink font-sans pb-32">
       <Confetti trigger={confettiTrigger} />
       {showGuestGate && (
-        <div className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-ink/40 flex items-center justify-center p-4">
           <div className="bg-canvas rounded-2xl w-full max-w-sm p-6 shadow-xl">
             <div className="size-10 rounded-full bg-accent-yellow flex items-center justify-center mb-3">
               <Lock className="size-5" />

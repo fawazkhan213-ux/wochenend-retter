@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Navigation, Plus, Trash2, LocateFixed, Sparkles, UserCircle2 } from "lucide-react";
+import { MapPin, Navigation, Plus, Trash2, LocateFixed, Sparkles, UserCircle2, Search } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
 import { SUNDAY_CATEGORIES } from "@/lib/sunday-data";
@@ -65,6 +65,12 @@ function OpenSundayPage() {
   const [category, setCategory] = useState(SUNDAY_CATEGORIES[0]!.id);
   const [note, setNote] = useState("");
   const [fallbackLoading, setFallbackLoading] = useState(false);
+  const [storeQuery, setStoreQuery] = useState("");
+  const [debouncedStoreQuery, setDebouncedStoreQuery] = useState("");
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedStoreQuery(storeQuery.trim()), 350);
+    return () => window.clearTimeout(t);
+  }, [storeQuery]);
   const geocodeFn = useServerFn(geocodeCity);
   const reverseFn = useServerFn(reverseGeocode);
   const textFn = useServerFn(searchTextPlaces);
@@ -189,6 +195,32 @@ function OpenSundayPage() {
   const cat = SUNDAY_CATEGORIES.find((c) => c.id === activeCat)!;
   const nearbyFn = useServerFn(searchNearbyPlaces);
 
+  const storeSearch = useQuery({
+    queryKey: ["store-search", debouncedStoreQuery, geo.coords?.lat, geo.coords?.lng],
+    queryFn: () =>
+      textFn({
+        data: {
+          query: debouncedStoreQuery,
+          lat: geo.coords?.lat,
+          lng: geo.coords?.lng,
+          radius: 5000,
+          maxResults: 6,
+        },
+      }),
+    enabled: debouncedStoreQuery.length >= 2 && !!geo.coords,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const rankedStoreSearch = useMemo(() => {
+    if (!storeSearch.data || !geo.coords) return [];
+    return [...storeSearch.data]
+      .map((p) => ({
+        ...p,
+        distance: distanceMeters(geo.coords as Coords, { lat: p.lat, lng: p.lng }),
+      }))
+      .sort((a, b) => a.distance - b.distance);
+  }, [storeSearch.data, geo.coords]);
+
   const nearby = useQuery({
     queryKey: ["nearby", activeCat, geo.coords?.lat, geo.coords?.lng],
     queryFn: () =>
@@ -266,7 +298,7 @@ function OpenSundayPage() {
     setFavs((prev) => prev.filter((f) => f.id !== id));
 
   return (
-    <div className="min-h-screen bg-canvas text-ink font-sans pb-32">
+    <div className="min-h-screen bg-canvas text-ink font-sans pb-32 overflow-x-hidden">
       <header className="px-5 pt-8 pb-6">
         <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-1">
           Sonntag in Deutschland
@@ -311,8 +343,85 @@ function OpenSundayPage() {
       </section>
 
       {/* Category tabs */}
+      {/* Store search */}
       <section className="px-5 mb-4">
-        <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-2">
+        <div className="bg-white rounded-2xl ring-1 ring-black/5 p-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Search className="size-4 text-zinc-400 ml-1" />
+            <input
+              value={storeQuery}
+              onChange={(e) => setStoreQuery(e.target.value)}
+              placeholder="Laden suchen — z.B. Lidl, Apotheke, Späti"
+              className="flex-1 bg-transparent text-sm py-2 focus:outline-none placeholder:text-zinc-400"
+            />
+            {storeQuery && (
+              <button
+                onClick={() => setStoreQuery("")}
+                className="text-xs text-zinc-400 px-2"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {debouncedStoreQuery.length >= 2 && !geo.coords && (
+            <div className="text-xs text-zinc-500 px-2 pb-2 pt-1">
+              Standort freigeben, um in deiner Nähe zu suchen.
+            </div>
+          )}
+          {debouncedStoreQuery.length >= 2 && geo.coords && (
+            <div className="mt-2 border-t border-zinc-100 pt-2">
+              {storeSearch.isLoading && (
+                <div className="text-xs text-zinc-500 px-2 py-3">
+                  Suche „{debouncedStoreQuery}“ in deiner Nähe …
+                </div>
+              )}
+              {!storeSearch.isLoading && rankedStoreSearch.length === 0 && (
+                <div className="text-xs text-zinc-500 px-2 py-3">
+                  Keine Treffer im 5-km-Umkreis.
+                </div>
+              )}
+              {rankedStoreSearch.length > 0 && (
+                <ul className="divide-y divide-zinc-100">
+                  {rankedStoreSearch.map((p) => (
+                    <li key={p.id} className="px-2 py-2 flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium truncate">{p.name}</span>
+                          {p.openNow === true && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
+                              offen
+                            </span>
+                          )}
+                          {p.openNow === false && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
+                              geschlossen
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-zinc-500 truncate">{p.address}</div>
+                        <div className="text-xs text-zinc-400 mt-0.5">
+                          {formatDistance(p.distance)}
+                        </div>
+                      </div>
+                      <a
+                        href={p.mapsUri || mapsSearchUrl(p.name)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1 shrink-0"
+                      >
+                        <Navigation className="size-3" /> Route
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="px-5 mb-4">
+        <div className="flex gap-2 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {SUNDAY_CATEGORIES.map((c) => {
             const isActive = c.id === activeCat;
             return (
@@ -450,7 +559,7 @@ function OpenSundayPage() {
           </div>
         )}
 
-        {preferredBrand && geo.coords && (
+        {isAuthenticated && preferredBrand && geo.coords && (
           <div className="mb-5">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 px-1 flex items-center gap-1">
               <Sparkles className="size-3" /> Dein üblicher Laden ·{" "}
@@ -492,6 +601,8 @@ function OpenSundayPage() {
           </div>
         )}
 
+        {isAuthenticated && (
+        <>
         <form
           onSubmit={add}
           className="bg-white rounded-2xl ring-1 ring-black/5 p-4 shadow-sm space-y-3 mb-4"
@@ -619,6 +730,8 @@ function OpenSundayPage() {
               );
             })}
           </ul>
+        )}
+        </>
         )}
       </section>
 
