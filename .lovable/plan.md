@@ -1,66 +1,83 @@
-# Plan — Sonntagsruhe Planner: v3 features
 
-## 1. Dashboard countdown box — unit toggle + weather
+# How to publish your project as an "app"
 
-- Keep the current black card + display type. Add two small controls in the top-right:
-  - **Unit toggle**: `Sek · Std · Tage` (segmented pill). Persist choice in `localStorage`.
-    - `Sek` (default): keep current `HH:MM:SS`
-    - `Std`: single big number = total hours remaining
-    - `Tage`: single big number = days remaining (decimal like "2,3")
-- **Weather chip** below the countdown, inside the same card: small row like `☀︎ 14° · leicht bewölkt · Berlin`. Reuse existing `getSundayWeather` server fn and the persisted `sonntag.city`. Falls back to "—" while loading. Muted zinc-400 text so it doesn't fight the numbers.
+Your project is a **web app** built with React. When you press Publish in Lovable, it always gives you a URL — that's how the web works. To make it *feel* or *behave* like an app, you have three options. Here's what each one is, what it costs, and how much work it is.
 
-## 2. Shopping — AI item suggestions from history
+---
 
-- Track every added item in a new `sonntag.itemHistory` localStorage: `{ text, count, lastAt }`.
-- Below the "add item" input in `/shopping`, show up to 5 chips: `häufig gekauft` — the top items by count (excluding items already on the active list). Tap → adds to the active list.
-- Use Lovable AI (`google/gemini-3-flash-preview`) via a new `suggestItems` server fn: given the history + current list, returns 3 smart contextual suggestions ("You bought Milch 4× in last 3 weeks — nachfüllen?"). Show as a separate "Vorschläge" strip with a subtle sparkle icon. Cache result for 10 min per list.
+## Option 1 — Installable web app (PWA)
 
-## 3. Party popper when list is complete
+**What it is:** Same web app, but users tap "Add to Home Screen" on their phone. It gets an icon, opens fullscreen (no browser bar), and looks/feels native. This is what Twitter, Starbucks, and Uber use on mobile web.
 
-- When the active list transitions from "at least one open" → "all done AND at least 1 item", fire a one-shot confetti burst (canvas-confetti or a small inline SVG-particles component — no dependency needed, ~40 lines).
-- Also show a small toast/banner: `Alles erledigt für diese Woche 🎉`.
-- Track a `celebratedListId` in state so it only fires once per completion event.
+**Pros**
+- Free. No app store. No review.
+- One codebase, works on iPhone, Android, desktop.
+- Updates instantly when you republish — no waiting.
+- Ready in ~5 minutes of work in Lovable.
 
-## 4. Prices + total + AI price memory
+**Cons**
+- Users have to know to tap "Add to Home Screen" (iPhone hides this in the Share menu).
+- No listing in the App Store / Play Store.
+- Limited access to some native features (deep hardware, background push on iOS is limited).
 
-- Extend `ShoppingItem` with optional `price?: number` (EUR).
-- Each row gets a compact price input (`0,00 €`, right-aligned, ~72px wide).
-- Sticky footer above the bottom nav on `/shopping`: **Summe: 12,40 €** — sum of all items with a price.
-- **Price memory**: new `sonntag.priceMemory` localStorage `{ [normalizedText]: { avg, last, count } }`. Update whenever a user sets a price. When adding a new item, prefill the price with the remembered average (rounded to nearest 0,10 €). Small "≈" prefix indicates it's a remembered guess until edited.
-- Keep purely client-side; no server calls needed for price memory (AI feature only for suggestions in step 2).
+**Steps**
+1. Ask me to "make it installable as a PWA." I add a manifest + icons.
+2. Click Publish in Lovable (top-right web icon).
+3. (Optional) Connect a custom domain in Project Settings → Domains.
+4. On your phone, open the URL → Share → "Add to Home Screen."
 
-## 5. Plan section — outing color palette
+---
 
-- Introduce a `data-theme="outing"` scope on the `/plan` root wrapper that overrides CSS variables locally in `src/styles.css`:
-  - `--canvas`: warm sunlit cream (`oklch(0.97 0.03 90)`)
-  - `--ink`: deep forest (`oklch(0.28 0.06 155)`)
-  - Accent: golden-orange (`oklch(0.78 0.16 65)`)
-  - Card surface: white with a faint peach tint
-- Replace the dark misty park hero image with a bright outdoor illustration (generate new asset — sun-drenched meadow / picnic vibe, flat Bauhaus style).
-- Update cards on `/plan` to use the new surface + accent so the whole page reads as "let's go outside", not "quiet ruin".
-- Other routes stay on the original canvas.
+## Option 2 — Real native app in the App Store / Play Store (Capacitor)
 
-## 6. Places to visit nearby (replaces current "In deiner Nähe" block)
+**What it is:** We wrap your web app in a native shell (Capacitor) and submit it to Apple and Google as a real installable app.
 
-- Remove the museum/cinema toggle + list on `/plan`.
-- Add a dedicated **"Orte in deiner Nähe"** section:
-  - One "Standort teilen" CTA if no coords.
-  - Once we have coords: fetch a mixed set (park, museum, cafe, tourist_attraction) via existing `searchNearbyPlaces` — one call, `includedTypes` = all four.
-  - Show as a horizontally-scrollable card row: each card = name, category glyph, distance, "Route öffnen" → opens Google Maps directions (`https://www.google.com/maps/dir/?api=1&destination=lat,lng`), using existing `mapsSearchUrl`/we already have `mapsUri` from the server fn.
-- Same section replaces the earlier removed UI; nothing else on the page depends on the old museum toggle.
+**Pros**
+- Real App Store / Play Store listing.
+- Full access to native features (push, camera, biometrics, background).
+- Feels 100% native.
 
-## 7. Technical notes
+**Cons — this is a real project, not a click:**
+- **Apple Developer account: $99/year.** Google Play: $25 one-time.
+- **You need a Mac with Xcode** to build and submit the iOS app. There is no way around this — Apple requires it.
+- Store review takes **1–7 days**, and Apple may reject and ask for changes.
+- Every update goes through review again.
+- Export code from Lovable to GitHub → clone locally → run Capacitor build commands.
 
-- New files:
-  - `src/lib/itemHistory.ts` (history + price memory helpers)
-  - `src/lib/suggestions.functions.ts` (Lovable AI server fn)
-  - `src/components/Confetti.tsx` (dependency-free particle burst)
-- Edits:
-  - `src/routes/index.tsx` — unit toggle, weather chip
-  - `src/routes/shopping.tsx` — history chips, AI suggestions, prices, total, confetti
-  - `src/routes/plan.tsx` — outing theme wrapper, new Places section, remove old nearby block
-  - `src/styles.css` — `[data-theme="outing"]` overrides
-  - `src/assets/` — new bright outdoor hero image (generated)
-- No schema changes, no Cloud needed for this batch. Google Maps + Lovable AI Gateway are already connected.
+**Steps (high level)**
+1. In Lovable: click the **+** menu → **GitHub** → connect and push your project.
+2. On your Mac: clone the repo, run `npm install`, add Capacitor (`npx cap add ios` / `npx cap add android`).
+3. Buy Apple Developer + Google Play accounts.
+4. Open in Xcode (iOS) / Android Studio, set app name, icon, bundle ID.
+5. Build, upload to App Store Connect / Play Console, fill listing (screenshots, description, privacy policy).
+6. Submit for review, wait, publish.
 
-Ready to build on approval.
+Realistically: **1–2 weekends of work** for a first-time submission, plus ongoing account fees.
+
+---
+
+## Option 3 — Custom domain only (stay a web app)
+
+**What it is:** Keep it as a website but publish it under your own domain like `sonntagsplan.de` instead of `something.lovable.app`. No install, just a nicer URL.
+
+**Pros**
+- ~10 minutes of work.
+- Looks professional.
+- Can be combined with Option 1 (PWA on your own domain — best of both).
+
+**Cons**
+- Not an "app" — still opens in a browser tab unless combined with PWA.
+- Domain costs ~$10–15/year.
+
+**Steps**
+1. Click Publish in Lovable.
+2. Project Settings → Project → Domains → **Buy new domain** (or connect one you already own).
+3. Follow the DNS setup (Lovable walks you through it).
+
+---
+
+## My honest recommendation for a first project
+
+Start with **Option 1 (PWA)** — optionally on your own domain (Option 3). You'll have a real "app on your phone" today, for free, no Mac, no review. If people actually use it and you outgrow PWA, *then* invest the time and money in Option 2 to get on the App Store.
+
+**Tell me which option you want** (or "PWA + custom domain") and I'll set it up.
