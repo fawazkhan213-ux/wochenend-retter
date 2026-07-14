@@ -262,6 +262,7 @@ function OpenSundayPage() {
     ]);
     setName("");
     setNote("");
+    setDebouncedName("");
   };
 
   const saveFromNearby = (place: NearbyPlace) => {
@@ -292,6 +293,7 @@ function OpenSundayPage() {
     ]);
     setName("");
     setNote("");
+    setDebouncedName("");
   };
 
   const remove = (id: string) =>
