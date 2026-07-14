@@ -258,6 +258,37 @@ function ShoppingPage() {
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans pb-32">
       <Confetti trigger={confettiTrigger} />
+      {showGuestGate && (
+        <div className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center p-4">
+          <div className="bg-canvas rounded-2xl w-full max-w-sm p-6 shadow-xl">
+            <div className="size-10 rounded-full bg-accent-yellow flex items-center justify-center mb-3">
+              <Lock className="size-5" />
+            </div>
+            <h2 className="text-lg font-semibold mb-1">
+              Ab der 3. Liste brauchst du ein Konto
+            </h2>
+            <p className="text-sm text-zinc-500 mb-5">
+              Mit einem kostenlosen Konto erstellst du unbegrenzt viele Listen
+              und kannst gelöschte Listen 30 Tage lang wiederherstellen.
+            </p>
+            <div className="flex gap-2">
+              <Link
+                to="/auth"
+                onClick={() => setShowGuestGate(false)}
+                className="flex-1 bg-ink text-canvas rounded-xl py-2.5 text-sm font-semibold text-center"
+              >
+                Konto erstellen
+              </Link>
+              <button
+                onClick={() => setShowGuestGate(false)}
+                className="px-4 rounded-xl bg-zinc-100 text-sm font-medium"
+              >
+                Später
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="px-5 pt-8 pb-6">
         <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-1">
           Wocheneinkauf
