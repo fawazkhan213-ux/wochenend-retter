@@ -77,18 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sonntagsruhe Planner — Wochenende in Deutschland" },
+      { title: "Wochenend-Retter — Einkauf & Sonntag in Deutschland" },
       {
         name: "description",
         content:
-          "Countdown bis Ladenschluss, Einkaufsliste, was am Sonntag offen hat und ein Plan für den Ruhetag.",
+          "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — nichts mehr vergessen.",
       },
-      { name: "author", content: "Sonntagsruhe" },
-      { property: "og:title", content: "Sonntagsruhe Planner" },
+      { name: "author", content: "Wochenend-Retter" },
+      { property: "og:title", content: "Wochenend-Retter" },
       {
         property: "og:description",
         content:
-          "Wochenend-Survival für Deutschland: Ladenschluss-Countdown, Einkaufsliste, Sonntag offen.",
+          "Nie wieder Einkauf vergessen: Ladenschluss-Countdown, Einkaufsliste und Sonntag offen.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -96,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#1F4A3A" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { name: "apple-mobile-web-app-title", content: "Sonntagsruhe" },
+      { name: "apple-mobile-web-app-title", content: "Wochenend-Retter" },
     ],
     links: [
       {
