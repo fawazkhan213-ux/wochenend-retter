@@ -166,6 +166,51 @@ export const geocodeCity = createServerFn({ method: "POST" })
     };
   });
 
+export const reverseGeocode = createServerFn({ method: "POST" })
+  .inputValidator((data: { lat: number; lng: number }) => {
+    if (typeof data.lat !== "number" || typeof data.lng !== "number") {
+      throw new Error("lat/lng required");
+    }
+    return data;
+  })
+  .handler(async ({ data }) => {
+    const lovableKey = process.env.LOVABLE_API_KEY;
+    const gmKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!lovableKey || !gmKey) {
+      throw new Error("Google Maps connector credentials missing");
+    }
+    const url = `${GEOCODE_URL}?latlng=${data.lat},${data.lng}&language=de&result_type=neighborhood|locality|postal_town|sublocality`;
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": gmKey,
+      },
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`Reverse geocode failed [${response.status}]: ${errText}`);
+      throw new Error(`Reverse geocode failed [${response.status}]`);
+    }
+    const json = (await response.json()) as {
+      results?: Array<{
+        formatted_address?: string;
+        address_components?: Array<{ long_name?: string; types?: string[] }>;
+      }>;
+    };
+    const hit = json.results?.[0];
+    // Prefer neighborhood/locality name if we can find one.
+    const comps = hit?.address_components ?? [];
+    const preferred =
+      comps.find((c) => c.types?.includes("neighborhood"))?.long_name ||
+      comps.find((c) => c.types?.includes("sublocality"))?.long_name ||
+      comps.find((c) => c.types?.includes("locality"))?.long_name ||
+      comps.find((c) => c.types?.includes("postal_town"))?.long_name;
+    return {
+      label: preferred ?? hit?.formatted_address ?? "Unbekannter Ort",
+      formatted: hit?.formatted_address ?? "",
+    };
+  });
+
 const TEXT_GATEWAY_URL =
   "https://connector-gateway.lovable.dev/google_maps/places/v1/places:searchText";
 
