@@ -559,7 +559,7 @@ function OpenSundayPage() {
           </div>
         )}
 
-        {preferredBrand && geo.coords && (
+        {isAuthenticated && preferredBrand && geo.coords && (
           <div className="mb-5">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 px-1 flex items-center gap-1">
               <Sparkles className="size-3" /> Dein üblicher Laden ·{" "}
@@ -601,6 +601,8 @@ function OpenSundayPage() {
           </div>
         )}
 
+        {isAuthenticated && (
+        <>
         <form
           onSubmit={add}
           className="bg-white rounded-2xl ring-1 ring-black/5 p-4 shadow-sm space-y-3 mb-4"
@@ -728,6 +730,8 @@ function OpenSundayPage() {
               );
             })}
           </ul>
+        )}
+        </>
         )}
       </section>
 
