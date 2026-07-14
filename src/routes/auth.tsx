@@ -7,6 +7,9 @@ import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : "",
+  }),
   head: () => ({
     meta: [
       { title: "Anmelden — Sonntagsruhe Planner" },
@@ -20,9 +23,17 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+// Only accept same-origin relative paths as post-auth destinations.
+function safeNext(next: string): string | null {
+  if (!next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 function AuthPage() {
   const { user, hydrated } = useAuth();
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const safe = safeNext(next);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,8 +42,14 @@ function AuthPage() {
   const [info, setInfo] = useState<string | null>(null);
 
   useEffect(() => {
-    if (hydrated && user) navigate({ to: "/account" });
-  }, [hydrated, user, navigate]);
+    if (hydrated && user) {
+      if (safe) {
+        window.location.href = safe;
+      } else {
+        navigate({ to: "/account" });
+      }
+    }
+  }, [hydrated, user, navigate, safe]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +61,10 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/account" },
+          options: {
+            emailRedirectTo:
+              window.location.origin + (safe ?? "/account"),
+          },
         });
         if (error) throw error;
         setInfo("Konto erstellt. Du bist angemeldet.");
@@ -65,7 +85,7 @@ function AuthPage() {
   const google = async () => {
     setError(null);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/account",
+      redirect_uri: window.location.origin + (safe ?? "/account"),
     });
     if (result.error) {
       setError(result.error.message ?? "Google-Anmeldung fehlgeschlagen.");
