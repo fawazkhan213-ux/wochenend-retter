@@ -299,7 +299,9 @@ function ShoppingPage() {
               ? "Alles im Kasten."
               : items.length === 0
                 ? "Los geht's."
-                : `${openCount} ${openCount === 1 ? "Ding" : "Dinge"} fehlen noch.`
+                : openCount === 1
+                  ? "Noch ein Ding zu deiner kompletten Liste."
+                  : `${openCount} Dinge fehlen noch.`
             : "Deine Listen."}
         </h1>
       </header>
