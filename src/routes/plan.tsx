@@ -71,14 +71,6 @@ function PlanPage() {
     }
   }
 
-  // "Aktualisieren" in the corner refreshes location AND everything that
-  // depends on it — the Sunday weather and the nearby places.
-  const refreshAll = () => {
-    geo.request();
-    query.refetch();
-    places.refetch();
-  };
-
   // Scope the outing color palette to this route only.
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", "outing");
@@ -116,6 +108,14 @@ function PlanPage() {
     enabled: !!geo.coords,
     staleTime: 15 * 60 * 1000,
   });
+
+  // "Aktualisieren" in the corner refreshes location AND everything that
+  // depends on it — the Sunday weather and the nearby places.
+  const refreshAll = () => {
+    geo.request();
+    query.refetch();
+    places.refetch();
+  };
 
   const textFn = useServerFn(searchTextPlaces);
   const textSearch = useQuery({
