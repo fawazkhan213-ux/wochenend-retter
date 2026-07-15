@@ -39,8 +39,7 @@ export const Route = createFileRoute("/plan")({
 
 function PlanPage() {
   const geo = useGeolocation();
-  const [city, setCity] = useLocalStorage<string>("sonntag.city", "Berlin");
-  const [draft, setDraft] = useState("");
+  const [city] = useLocalStorage<string>("sonntag.city", "Berlin");
   const [placeQuery, setPlaceQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [fallbackLoading, setFallbackLoading] = useState(false);
@@ -71,6 +70,14 @@ function PlanPage() {
       setFallbackLoading(false);
     }
   }
+
+  // "Aktualisieren" in the corner refreshes location AND everything that
+  // depends on it — the Sunday weather and the nearby places.
+  const refreshAll = () => {
+    geo.request();
+    query.refetch();
+    places.refetch();
+  };
 
   // Scope the outing color palette to this route only.
   useEffect(() => {
@@ -221,30 +228,6 @@ function PlanPage() {
         </div>
       </section>
 
-      <section className="px-5 mb-8">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (draft.trim()) setCity(draft.trim());
-            setDraft("");
-          }}
-          className="flex gap-2 bg-white p-2 rounded-2xl ring-1 ring-black/5 shadow-sm"
-        >
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={`Andere Stadt (aktuell: ${city})`}
-            className="flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none placeholder:text-zinc-400"
-          />
-          <button
-            type="submit"
-            className="bg-ink text-canvas rounded-xl px-4 text-sm font-medium"
-          >
-            Setzen
-          </button>
-        </form>
-      </section>
-
       {/* Places to visit nearby */}
       <section className="px-5 mb-10">
         <div className="flex items-center justify-between mb-3">
@@ -252,8 +235,8 @@ function PlanPage() {
             Orte in deiner Nähe
           </h2>
           <button
-            onClick={geo.request}
-            disabled={geo.loading}
+            onClick={refreshAll}
+            disabled={geo.loading || query.isFetching || places.isFetching}
             className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-white ring-1 ring-black/5 flex items-center gap-1 disabled:opacity-50"
           >
             <LocateFixed className="size-3" />
@@ -302,7 +285,7 @@ function PlanPage() {
             <input
               value={placeQuery}
               onChange={(e) => setPlaceQuery(e.target.value)}
-              placeholder="Store oder Ort finden (z.B. Rewe, Späti)"
+              placeholder="Laden oder Ort finden (z. B. Rewe, Späti)"
               className="flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none placeholder:text-zinc-400"
             />
             <button
