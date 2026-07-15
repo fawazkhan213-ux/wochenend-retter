@@ -241,7 +241,9 @@ function Dashboard() {
                 ? "Alles erledigt"
                 : items.length === 0
                   ? "Liste starten"
-                  : `${openCount} offen — Liste öffnen`}
+                  : openCount === 1
+                    ? "Noch 1 offen — Liste öffnen"
+                    : `${openCount} offen — Liste öffnen`}
             </span>
           </div>
         </Link>
