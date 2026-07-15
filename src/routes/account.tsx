@@ -11,6 +11,10 @@ import {
   UserCircle2,
   X,
   MessageCircleHeart,
+  Shield,
+  Lock,
+  FileText,
+  ChevronDown,
 } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -66,9 +70,124 @@ function AccountPage() {
       )}
 
       <FeedbackCard />
+      <PrivacySecurityCard />
 
       <BottomNav />
     </div>
+  );
+}
+
+type PolicySection = "privacy" | "security" | "imprint";
+
+function PrivacySecurityCard() {
+  const [open, setOpen] = useState<PolicySection | null>(null);
+  const toggle = (s: PolicySection) => setOpen((cur) => (cur === s ? null : s));
+
+  const items: {
+    id: PolicySection;
+    label: string;
+    Icon: typeof Shield;
+    body: React.ReactNode;
+  }[] = [
+    {
+      id: "privacy",
+      label: "Datenschutz",
+      Icon: Shield,
+      body: (
+        <>
+          <p>
+            Wochenend-Retter speichert deine Einkaufslisten, Favoriten und
+            Einstellungen zuerst lokal auf deinem Gerät. Nur wenn du ein Konto
+            anlegst, werden gelöschte Listen 30 Tage lang serverseitig
+            aufbewahrt, damit du sie wiederherstellen kannst.
+          </p>
+          <p>
+            Für Orte in deiner Nähe fragen wir – nur mit deiner Zustimmung –
+            deinen Standort ab und schicken die Koordinaten an Google Maps.
+            Wetterdaten kommen von Open-Meteo. Es gibt kein Tracking, keine
+            Werbung, keine Weitergabe an Dritte.
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "security",
+      label: "Sicherheit",
+      Icon: Lock,
+      body: (
+        <>
+          <p>
+            Die App läuft komplett über verschlüsseltes HTTPS. Konten werden
+            über unseren Backend-Anbieter mit gehashten Passwörtern verwaltet.
+            Zugriff auf deine Daten hast ausschließlich du – auch wir sehen
+            deine Listen nicht im Klartext.
+          </p>
+          <p>
+            Wenn du dich sicherer fühlen willst, wähle beim Anlegen des Kontos
+            ein starkes, einzigartiges Passwort und melde dich auf fremden
+            Geräten wieder ab.
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "imprint",
+      label: "Impressum",
+      Icon: FileText,
+      body: (
+        <>
+          <p>
+            Wochenend-Retter ist ein privates Hobby-Projekt, das dir den
+            deutschen Wochenendrhythmus erleichtert. Anbieter-Kennzeichnung
+            nach §5 TMG stellen wir gerne auf Anfrage bereit.
+          </p>
+          <p>
+            Kontakt:{" "}
+            <a className="underline" href="mailto:hallo@wochenend-retter.app">
+              hallo@wochenend-retter.app
+            </a>
+          </p>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <section className="px-5 mb-10">
+      <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <Shield className="size-3.5" /> Datenschutz &amp; Sicherheit
+      </h3>
+      <div className="bg-white rounded-2xl ring-1 ring-black/5 overflow-hidden divide-y divide-zinc-100 shadow-sm">
+        {items.map(({ id, label, Icon, body }) => {
+          const isOpen = open === id;
+          return (
+            <div key={id}>
+              <button
+                onClick={() => toggle(id)}
+                aria-expanded={isOpen}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left"
+              >
+                <div className="size-8 rounded-lg bg-zinc-50 flex items-center justify-center ring-1 ring-black/5">
+                  <Icon className="size-4" />
+                </div>
+                <div className="flex-1 text-sm font-medium">{label}</div>
+                <ChevronDown
+                  className={`size-4 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {isOpen && (
+                <div className="px-4 pb-4 text-xs text-zinc-600 leading-relaxed space-y-2">
+                  {body}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[10px] text-zinc-400 mt-2 px-1">
+        Diese Inhalte werden nur eingeblendet, wenn du sie öffnest.
+      </p>
+    </section>
   );
 }
 

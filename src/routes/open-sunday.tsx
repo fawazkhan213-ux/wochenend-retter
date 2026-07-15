@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MapPin, Navigation, Plus, Trash2, LocateFixed, Sparkles, UserCircle2, Search } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
+import { StoreStatusBadge } from "@/components/StoreStatusBadge";
 import { SUNDAY_CATEGORIES } from "@/lib/sunday-data";
 import { useLocalStorage } from "@/lib/useLocalStorage";
 import { useAuth } from "@/lib/useAuth";
@@ -395,16 +396,7 @@ function OpenSundayPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-medium truncate">{p.name}</span>
-                          {p.openNow === true && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                              offen
-                            </span>
-                          )}
-                          {p.openNow === false && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
-                              geschlossen
-                            </span>
-                          )}
+                          <StoreStatusBadge place={p} />
                         </div>
                         <div className="text-xs text-zinc-500 truncate">{p.address}</div>
                         <div className="text-xs text-zinc-400 mt-0.5">
@@ -499,16 +491,7 @@ function OpenSundayPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium truncate">{p.name}</span>
-                    {p.openNow === true && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                        offen
-                      </span>
-                    )}
-                    {p.openNow === false && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-zinc-100 text-zinc-500">
-                        geschlossen
-                      </span>
-                    )}
+                    <StoreStatusBadge place={p} />
                   </div>
                   <div className="text-xs text-zinc-500 truncate">{p.address}</div>
                   <div className="text-xs text-zinc-400 mt-0.5">

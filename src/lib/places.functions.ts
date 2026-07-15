@@ -10,6 +10,8 @@ export type NearbyPlace = {
   hours: string[];
   mapsUri: string;
   typeLabel: string;
+  /** Minutes until the store closes today, when known and currently open. */
+  closesInMinutes: number | null;
 };
 
 type PlacesResponse = {
@@ -18,7 +20,13 @@ type PlacesResponse = {
     displayName?: { text?: string };
     formattedAddress?: string;
     location?: { latitude?: number; longitude?: number };
-    currentOpeningHours?: { openNow?: boolean };
+    currentOpeningHours?: {
+      openNow?: boolean;
+      periods?: Array<{
+        open?: { day?: number; hour?: number; minute?: number };
+        close?: { day?: number; hour?: number; minute?: number };
+      }>;
+    };
     regularOpeningHours?: { weekdayDescriptions?: string[] };
     googleMapsUri?: string;
     primaryTypeDisplayName?: { text?: string };
@@ -31,6 +39,7 @@ const FIELD_MASK = [
   "places.formattedAddress",
   "places.location",
   "places.currentOpeningHours.openNow",
+  "places.currentOpeningHours.periods",
   "places.regularOpeningHours.weekdayDescriptions",
   "places.googleMapsUri",
   "places.primaryTypeDisplayName",
@@ -41,17 +50,38 @@ const GATEWAY_URL =
 
 function normalize(json: PlacesResponse): NearbyPlace[] {
   return (json.places ?? [])
-    .map((p) => ({
-      id: p.id ?? "",
-      name: p.displayName?.text ?? "",
-      address: p.formattedAddress ?? "",
-      lat: p.location?.latitude ?? 0,
-      lng: p.location?.longitude ?? 0,
-      openNow: p.currentOpeningHours?.openNow ?? null,
-      hours: p.regularOpeningHours?.weekdayDescriptions ?? [],
-      mapsUri: p.googleMapsUri ?? "",
-      typeLabel: p.primaryTypeDisplayName?.text ?? "",
-    }))
+    .map((p) => {
+      const openNow = p.currentOpeningHours?.openNow ?? null;
+      let closesInMinutes: number | null = null;
+      if (openNow && p.currentOpeningHours?.periods) {
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const nowDay = now.getDay(); // Google uses 0=Sunday, matches JS
+        let best: number | null = null;
+        for (const per of p.currentOpeningHours.periods) {
+          const c = per.close;
+          if (!c || typeof c.hour !== "number") continue;
+          const cDay = c.day ?? nowDay;
+          const cMin = c.hour * 60 + (c.minute ?? 0);
+          let delta = (cDay - nowDay) * 1440 + cMin - nowMin;
+          if (delta < 0) delta += 7 * 1440;
+          if (delta >= 0 && (best === null || delta < best)) best = delta;
+        }
+        closesInMinutes = best;
+      }
+      return {
+        id: p.id ?? "",
+        name: p.displayName?.text ?? "",
+        address: p.formattedAddress ?? "",
+        lat: p.location?.latitude ?? 0,
+        lng: p.location?.longitude ?? 0,
+        openNow,
+        hours: p.regularOpeningHours?.weekdayDescriptions ?? [],
+        mapsUri: p.googleMapsUri ?? "",
+        typeLabel: p.primaryTypeDisplayName?.text ?? "",
+        closesInMinutes,
+      };
+    })
     .filter((p) => p.id && p.name);
 }
 
