@@ -7,8 +7,8 @@ export const body = loadBody("normal", { weights: ["400", "600"], subsets: ["lat
 export const COLORS = {
   cream: "#F5EFE6",
   ink: "#141414",
-  yellow: "#FFD84D",
-  red: "#E63946",
-  green: "#2A9D8F",
+  yellow: "#E9A73C",
+  red: "#C0392B",
+  green: "#1F4B33",
   zinc: "#6B6B6B",
 };
