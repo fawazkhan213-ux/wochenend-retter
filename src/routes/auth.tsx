@@ -35,6 +35,7 @@ function AuthPage() {
   const { next } = Route.useSearch();
   const safe = safeNext(next);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,6 +63,7 @@ function AuthPage() {
           email,
           password,
           options: {
+            data: { name: name.trim() },
             emailRedirectTo:
               window.location.origin + (safe ?? "/account"),
           },
