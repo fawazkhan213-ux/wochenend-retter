@@ -35,6 +35,7 @@ function AuthPage() {
   const { next } = Route.useSearch();
   const safe = safeNext(next);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,6 +63,7 @@ function AuthPage() {
           email,
           password,
           options: {
+            data: { name: name.trim() },
             emailRedirectTo:
               window.location.origin + (safe ?? "/account"),
           },
@@ -123,6 +125,17 @@ function AuthPage() {
       </div>
 
       <form onSubmit={submit} className="space-y-3">
+        {mode === "signup" && (
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Dein Name"
+            maxLength={80}
+            className="w-full bg-white ring-1 ring-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-ink"
+          />
+        )}
         <input
           type="email"
           required

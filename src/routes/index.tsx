@@ -11,6 +11,7 @@ import { useLocalStorage } from "@/lib/useLocalStorage";
 import { useHydrated } from "@/lib/useHydrated";
 import { getActiveList, type ShoppingList } from "@/lib/shopping-lists";
 import { getSundayWeather } from "@/lib/weather.functions";
+import { useAuth } from "@/lib/useAuth";
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -24,6 +25,7 @@ type CountdownUnit = "sec" | "hours" | "days";
 
 function Dashboard() {
   const hydrated = useHydrated();
+  const { user } = useAuth();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     setNow(new Date());
@@ -32,6 +34,20 @@ function Dashboard() {
   }, []);
 
   const status = useMemo(() => getWeekendStatus(now), [now]);
+  const displayName =
+    (user?.user_metadata?.name as string | undefined)?.trim() ||
+    (user?.user_metadata?.full_name as string | undefined)?.trim() ||
+    user?.email?.split("@")[0] ||
+    "";
+  const hour = now.getHours();
+  const greeting =
+    hour < 5
+      ? "Gute Nacht"
+      : hour < 11
+        ? "Guten Morgen"
+        : hour < 18
+          ? "Guten Tag"
+          : "Guten Abend";
   const [lists] = useLocalStorage<ShoppingList[]>("sonntag.lists", []);
   const [activeId] = useLocalStorage<string | null>("sonntag.activeListId", null);
   const active = getActiveList(lists, activeId);
@@ -96,11 +112,13 @@ function Dashboard() {
               {status.weekdayLabel}, {status.dateLabel}
             </p>
             <h1 className="text-2xl font-medium text-balance tracking-tight">
+              {greeting}
+              {displayName ? `, ${displayName}` : ""}.{" "}
               {status.isSunday
-                ? "Guten Morgen. Heute ist Ruhetag."
+                ? "Heute ist Ruhetag."
                 : status.isSaturday
-                  ? "Guten Morgen. Heute wird eingekauft."
-                  : "Guten Morgen. Bald ist Wochenende."}
+                  ? "Heute wird eingekauft."
+                  : "Bald ist Wochenende."}
             </h1>
           </div>
           <div className="size-10 rounded-full bg-zinc-200 ring-1 ring-black/5 flex items-center justify-center text-sm font-display italic text-zinc-500">

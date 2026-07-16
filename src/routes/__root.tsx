@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { InstallPrompt } from "../components/InstallPrompt";
 import { SplashScreen } from "../components/SplashScreen";
+import { OfflineBanner } from "../components/OfflineBanner";
 
 function NotFoundComponent() {
   return (
@@ -83,16 +84,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — nichts mehr vergessen.",
+          "Wochenend-Retter: Ladenschluss-Countdown für Samstag, smarte Einkaufsliste und Läden, die sonntags in Deutschland offen haben. Kostenlos, ohne Werbung.",
       },
+      { name: "keywords", content: "verkaufsoffener sonntag, ladenschluss samstag, einkaufsliste, sonntag offen, wochenende planen, bäckerei sonntag, tankstelle sonntag, deutschland" },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { name: "language", content: "de" },
+      { httpEquiv: "content-language", content: "de-DE" },
       { name: "author", content: "Wochenend-Retter" },
       { property: "og:title", content: "Wochenend-Retter — Einkauf & Sonntag in Deutschland" },
       {
         property: "og:description",
         content:
-          "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — nichts mehr vergessen.",
+          "Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — dein Begleiter durchs deutsche Wochenende.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Wochenend-Retter" },
+      { property: "og:locale", content: "de_DE" },
+      { property: "og:url", content: "https://wochenend-retter.lovable.app/" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "theme-color", content: "#1F4A3A" },
@@ -100,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "Wochenend-Retter" },
       { name: "twitter:title", content: "Wochenend-Retter — Einkauf & Sonntag in Deutschland" },
-      { name: "twitter:description", content: "Dein Wochenend-Retter: Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — nichts mehr vergessen." },
+      { name: "twitter:description", content: "Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — dein Begleiter durchs deutsche Wochenende." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c55bcfc4-588a-4f31-b387-c9bdfb080a2b" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/c55bcfc4-588a-4f31-b387-c9bdfb080a2b" },
     ],
@@ -119,6 +127,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Wochenend-Retter",
+          url: "https://wochenend-retter.lovable.app/",
+          applicationCategory: "LifestyleApplication",
+          operatingSystem: "Web",
+          inLanguage: "de-DE",
+          description:
+            "Ladenschluss-Countdown, Einkaufsliste und was am Sonntag offen hat — dein Begleiter durchs deutsche Wochenende.",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -128,7 +153,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="de">
       <head>
         <HeadContent />
       </head>
@@ -149,6 +174,7 @@ function RootComponent() {
       <Outlet />
       <InstallPrompt />
       <SplashScreen />
+      <OfflineBanner />
     </QueryClientProvider>
   );
 }
