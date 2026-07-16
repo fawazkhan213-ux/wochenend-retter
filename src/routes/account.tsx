@@ -15,6 +15,7 @@ import {
   Lock,
   FileText,
   ChevronDown,
+  Share2,
 } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -70,6 +71,7 @@ function AccountPage() {
       )}
 
       <FeedbackCard />
+      <ShareAppCard />
       <PrivacySecurityCard />
 
       <BottomNav />
@@ -192,6 +194,7 @@ function PrivacySecurityCard() {
 }
 
 function FeedbackCard() {
+  const feedbackEmail = "wochenendretter@gmail.com";
   const subject = encodeURIComponent("Wochenend-Retter · Feedback");
   const body = encodeURIComponent(
     "Hi! Mir gefällt an Wochenend-Retter besonders …\n\nVerbesserungsvorschlag:\n\n",
@@ -209,18 +212,70 @@ function FeedbackCard() {
         </p>
         <div className="flex gap-2">
           <a
-            href={`mailto:hallo@wochenend-retter.app?subject=${subject}&body=${body}`}
+            href={`mailto:${feedbackEmail}?subject=${subject}&body=${body}`}
             className="flex-1 text-center bg-ink text-canvas rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider"
           >
             Feedback senden
           </a>
           <a
-            href={`mailto:hallo@wochenend-retter.app?subject=${encodeURIComponent("Wochenend-Retter · Idee")}`}
+            href={`mailto:${feedbackEmail}?subject=${encodeURIComponent("Wochenend-Retter · Idee")}`}
             className="flex-1 text-center bg-accent-yellow text-ink rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider"
           >
             Idee vorschlagen
           </a>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function ShareAppCard() {
+  const [copied, setCopied] = useState(false);
+  const share = async () => {
+    const url = "https://wochenend-retter.lovable.app";
+    const shareData = {
+      title: "Wochenend-Retter",
+      text: "Ladenschluss-Countdown, Einkaufsliste & Sonntag offen — in einer App.",
+      url,
+    };
+    try {
+      if (typeof navigator !== "undefined" && "share" in navigator) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      /* fall through to copy */
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* noop */
+    }
+  };
+  return (
+    <section className="px-5 mb-10">
+      <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <Share2 className="size-3.5" /> App teilen
+      </h3>
+      <div className="bg-white rounded-2xl ring-1 ring-black/5 p-5 shadow-sm">
+        <div className="text-sm font-semibold mb-1">Freunde einladen</div>
+        <p className="text-xs text-zinc-500 mb-4">
+          Teile Wochenend-Retter mit Familie und Freunden — damit niemand mehr
+          Samstag um kurz vor acht verzweifelt zum Späti rennt.
+        </p>
+        <button
+          onClick={share}
+          className="w-full bg-ink text-canvas rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2"
+        >
+          <Share2 className="size-3.5" /> Diese App teilen
+        </button>
+        {copied && (
+          <div className="mt-3 text-center text-xs font-medium text-green-700 bg-green-50 rounded-lg py-2 ring-1 ring-green-200">
+            Link in die Zwischenablage kopiert
+          </div>
+        )}
       </div>
     </section>
   );
