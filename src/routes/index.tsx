@@ -112,11 +112,13 @@ function Dashboard() {
               {status.weekdayLabel}, {status.dateLabel}
             </p>
             <h1 className="text-2xl font-medium text-balance tracking-tight">
+              {greeting}
+              {displayName ? `, ${displayName}` : ""}.{" "}
               {status.isSunday
-                ? "Guten Morgen. Heute ist Ruhetag."
+                ? "Heute ist Ruhetag."
                 : status.isSaturday
-                  ? "Guten Morgen. Heute wird eingekauft."
-                  : "Guten Morgen. Bald ist Wochenende."}
+                  ? "Heute wird eingekauft."
+                  : "Bald ist Wochenende."}
             </h1>
           </div>
           <div className="size-10 rounded-full bg-zinc-200 ring-1 ring-black/5 flex items-center justify-center text-sm font-display italic text-zinc-500">
