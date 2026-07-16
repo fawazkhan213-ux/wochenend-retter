@@ -14,8 +14,8 @@ export const Hook: React.FC = () => {
         }} />
       </AbsoluteFill>
       <Label delay={0}>Sonntag · 10:47</Label>
-      <Title delay={8} size={200}>Kühlschrank.</Title>
-      <Title delay={20} size={200} color={COLORS.red}>Leer.</Title>
+      <Title delay={8} size={150}>Kühlschrank.</Title>
+      <Title delay={20} size={220} color={COLORS.red}>Leer.</Title>
       <div style={{ height: 40 }} />
       <div style={{
         fontFamily: body, fontSize: 42, fontWeight: 400, color: COLORS.zinc,
