@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { InstallPrompt } from "../components/InstallPrompt";
 import { SplashScreen } from "../components/SplashScreen";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { TourOverlay } from "../components/TourOverlay";
 
 function NotFoundComponent() {
   return (
@@ -175,6 +176,7 @@ function RootComponent() {
       <InstallPrompt />
       <SplashScreen />
       <OfflineBanner />
+      <TourOverlay />
     </QueryClientProvider>
   );
 }

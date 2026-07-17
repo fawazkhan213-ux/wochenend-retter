@@ -17,6 +17,7 @@ export function BottomNav() {
           <Link
             key={to}
             to={to}
+            data-tour-id={to}
             className="flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 text-ink/40 transition-colors [&.active]:bg-ink [&.active]:text-canvas"
             activeOptions={{ exact: true }}
             activeProps={{ className: "active" }}
