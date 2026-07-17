@@ -37,8 +37,25 @@ export function InstallPrompt() {
     setPlatform(p);
     // Skip desktop — the OS install prompt is enough there.
     if (p !== "ios" && p !== "android") return;
-    const t = window.setTimeout(() => setVisible(true), 1500);
-    return () => window.clearTimeout(t);
+    // Wait until the first-run tour has been dismissed, then show.
+    const TOUR_KEY = "sonntag.tourDismissed";
+    let cancelled = false;
+    const check = () => {
+      if (cancelled) return;
+      if (window.localStorage.getItem(TOUR_KEY)) {
+        window.setTimeout(() => !cancelled && setVisible(true), 600);
+        return true;
+      }
+      return false;
+    };
+    if (check()) return;
+    const id = window.setInterval(() => {
+      if (check()) window.clearInterval(id);
+    }, 500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, []);
 
   const dismiss = () => {
