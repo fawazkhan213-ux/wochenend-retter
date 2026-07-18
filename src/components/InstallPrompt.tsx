@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Share, Plus, X, Smartphone } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 // One-time "Als Web-App speichern" hint. iOS Safari and Android/Chrome need
 // different steps, so we detect the platform and show tailored instructions.
@@ -27,6 +28,7 @@ function isStandalone() {
 const KEY = "sonntag.installPromptDismissed";
 
 export function InstallPrompt() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
   const [platform, setPlatform] = useState<Platform>("other");
 
@@ -70,7 +72,7 @@ export function InstallPrompt() {
       <div className="bg-canvas rounded-2xl w-full max-w-sm p-6 shadow-xl relative animate-fade-in">
         <button
           onClick={dismiss}
-          aria-label="Schließen"
+          aria-label={t("Schließen", "Close")}
           className="absolute top-3 right-3 size-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500"
         >
           <X className="size-4" />
@@ -79,11 +81,16 @@ export function InstallPrompt() {
           <Smartphone className="size-5" />
         </div>
         <h2 className="text-lg font-semibold mb-1">
-          Als Web-App auf dem Home-Bildschirm speichern
+          {t(
+            "Als Web-App auf dem Home-Bildschirm speichern",
+            "Save as a web app on your home screen",
+          )}
         </h2>
         <p className="text-sm text-zinc-500 mb-4">
-          So öffnet sich Wochenend-Retter mit einem Tipp – ohne Browser-Leiste
-          und mit eigener App-Optik.
+          {t(
+            "So öffnet sich Wochenend-Retter mit einem Tipp – ohne Browser-Leiste und mit eigener App-Optik.",
+            "Then Wochenend-Retter opens with a single tap — no browser bar, its own app look.",
+          )}
         </p>
 
         {platform === "ios" && (
@@ -93,9 +100,9 @@ export function InstallPrompt() {
                 1
               </span>
               <span>
-                Tippe unten in Safari auf{" "}
-                <Share className="inline size-4 -mt-0.5" aria-label="Teilen" />{" "}
-                <b>Teilen</b>.
+                {t("Tippe unten in Safari auf ", "In Safari, tap ")}
+                <Share className="inline size-4 -mt-0.5" aria-label={t("Teilen", "Share")} />{" "}
+                <b>{t("Teilen", "Share")}</b>.
               </span>
             </li>
             <li className="flex items-start gap-2">
@@ -103,8 +110,10 @@ export function InstallPrompt() {
                 2
               </span>
               <span>
-                Wähle{" "}
-                <b>„Zum Home-Bildschirm“</b>{" "}
+                {t("Wähle ", "Choose ")}
+                <b>
+                  {t("„Zum Home-Bildschirm“", "\u201CAdd to Home Screen\u201D")}
+                </b>{" "}
                 <Plus className="inline size-4 -mt-0.5" aria-hidden />.
               </span>
             </li>
@@ -112,7 +121,11 @@ export function InstallPrompt() {
               <span className="size-5 rounded-full bg-zinc-100 text-[10px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
                 3
               </span>
-              <span>Bestätige mit <b>„Hinzufügen“</b> rechts oben.</span>
+              <span>
+                {t("Bestätige mit ", "Confirm with ")}
+                <b>{t("„Hinzufügen“", "\u201CAdd\u201D")}</b>
+                {t(" rechts oben.", " in the top right.")}
+              </span>
             </li>
           </ol>
         )}
@@ -124,7 +137,9 @@ export function InstallPrompt() {
                 1
               </span>
               <span>
-                Tippe in Chrome oben rechts auf das <b>⋮ Menü</b>.
+                {t("Tippe in Chrome oben rechts auf das ", "In Chrome, tap the ")}
+                <b>{t("⋮ Menü", "⋮ menu")}</b>
+                {t(".", " in the top right.")}
               </span>
             </li>
             <li className="flex items-start gap-2">
@@ -132,16 +147,23 @@ export function InstallPrompt() {
                 2
               </span>
               <span>
-                Wähle{" "}
-                <b>„App installieren“</b> oder{" "}
-                <b>„Zum Startbildschirm zufügen“</b>.
+                {t("Wähle ", "Choose ")}
+                <b>{t("„App installieren“", "\u201CInstall app\u201D")}</b>{" "}
+                {t("oder ", "or ")}
+                <b>
+                  {t("„Zum Startbildschirm zufügen“", "\u201CAdd to Home screen\u201D")}
+                </b>
+                .
               </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="size-5 rounded-full bg-zinc-100 text-[10px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
                 3
               </span>
-              <span>Bestätige mit <b>„Installieren“</b>.</span>
+              <span>
+                {t("Bestätige mit ", "Confirm with ")}
+                <b>{t("„Installieren“", "\u201CInstall\u201D")}</b>.
+              </span>
             </li>
           </ol>
         )}
@@ -150,7 +172,7 @@ export function InstallPrompt() {
           onClick={dismiss}
           className="w-full bg-ink text-canvas rounded-xl py-3 text-sm font-semibold"
         >
-          Verstanden
+          {t("Verstanden", "Got it")}
         </button>
       </div>
     </div>
