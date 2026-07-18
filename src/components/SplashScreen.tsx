@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 // Only shown when the app is launched from a home-screen icon (standalone
 // display mode). Vanishes once the loading bar completes.
@@ -11,6 +12,7 @@ function isStandalone() {
 }
 
 export function SplashScreen() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
@@ -45,7 +47,7 @@ export function SplashScreen() {
         Wochenend-Retter
       </div>
       <p className="text-xs text-zinc-500 mb-8 uppercase tracking-wider">
-        Dein Sonntag, sortiert
+        {t("Dein Sonntag, sortiert", "Your Sunday, sorted")}
       </p>
       <div className="w-40 h-1 rounded-full bg-zinc-200 overflow-hidden">
         <div className="h-full bg-ink animate-[splash-load_1.4s_ease-out_forwards]" />
