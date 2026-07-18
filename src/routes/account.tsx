@@ -30,6 +30,7 @@ import {
   type DeletedListSnapshot,
 } from "@/lib/deleted-lists.functions";
 import type { ShoppingList } from "@/lib/shopping-lists";
+import { useI18n, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -47,26 +48,29 @@ export const Route = createFileRoute("/account")({
 
 function AccountPage() {
   const { user, hydrated } = useAuth();
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-canvas text-ink font-sans pb-32">
       <header className="px-5 pt-8 pb-6">
         <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-1">
-          Konto
+          {t("Konto", "Account")}
         </p>
         <h1 className="text-2xl font-medium tracking-tight">
-          {user ? "Dein Konto." : "Mehr aus dem Sonntag holen."}
+          {user
+            ? t("Dein Konto.", "Your account.")
+            : t("Mehr aus dem Sonntag holen.", "Get more out of Sunday.")}
         </h1>
       </header>
 
       {!hydrated ? (
         <section className="px-5">
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-sm text-zinc-500">
-            Lade …
+            {t("Lade …", "Loading …")}
           </div>
         </section>
       ) : user ? (
-        <SignedIn email={user.email ?? "Angemeldet"} />
+        <SignedIn email={user.email ?? t("Angemeldet", "Signed in")} />
       ) : (
         <SignedOut />
       )}
@@ -81,8 +85,6 @@ function AccountPage() {
   );
 }
 
-type Lang = "de" | "en";
-
 const LANG_LABELS: Record<Lang, { name: string; flag: string; selected: string }> = {
   de: { name: "Deutsch", flag: "🇩🇪", selected: "Ausgewählt" },
   en: { name: "English", flag: "🇬🇧", selected: "Selected" },
@@ -90,13 +92,7 @@ const LANG_LABELS: Record<Lang, { name: string; flag: string; selected: string }
 
 function LanguageCard() {
   const [open, setOpen] = useState(false);
-  const [lang, setLang] = useLocalStorage<Lang>("sonntag.lang", "de");
-
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.lang = lang;
-    }
-  }, [lang]);
+  const { lang, setLang } = useI18n();
 
   const heading = lang === "de" ? "Sprache" : "Language";
   const subtitle =
