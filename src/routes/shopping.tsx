@@ -28,6 +28,7 @@ import {
   type PriceMemory,
 } from "@/lib/itemHistory";
 import { suggestItems } from "@/lib/suggestions.functions";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/shopping")({
   head: () => ({
@@ -50,6 +51,7 @@ export const Route = createFileRoute("/shopping")({
 
 function ShoppingPage() {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const saveDeletedFn = useServerFn(saveDeletedList);
   const [showGuestGate, setShowGuestGate] = useState(false);
   const [lists, setLists] = useLocalStorage<ShoppingList[]>(
@@ -216,7 +218,7 @@ function ShoppingPage() {
       }
       if (nav?.clipboard?.writeText) {
         await nav.clipboard.writeText(text);
-        setShareToast("In die Zwischenablage kopiert");
+        setShareToast(t("In die Zwischenablage kopiert", "Copied to clipboard"));
         setTimeout(() => setShareToast(null), 2500);
       }
     } catch {
@@ -282,11 +284,13 @@ function ShoppingPage() {
               <Lock className="size-5" />
             </div>
             <h2 className="text-lg font-semibold mb-1">
-              Ab der 3. Liste brauchst du ein Konto
+              {t("Ab der 3. Liste brauchst du ein Konto", "You need an account for a 3rd list")}
             </h2>
             <p className="text-sm text-zinc-500 mb-5">
-              Mit einem kostenlosen Konto erstellst du unbegrenzt viele Listen
-              und kannst gelöschte Listen 30 Tage lang wiederherstellen.
+              {t(
+                "Mit einem kostenlosen Konto erstellst du unbegrenzt viele Listen und kannst gelöschte Listen 30 Tage lang wiederherstellen.",
+                "With a free account you get unlimited lists and can restore deleted lists for 30 days.",
+              )}
             </p>
             <div className="flex gap-2">
               <Link
@@ -294,13 +298,13 @@ function ShoppingPage() {
                 onClick={() => setShowGuestGate(false)}
                 className="flex-1 bg-ink text-canvas rounded-xl py-2.5 text-sm font-semibold text-center"
               >
-                Konto erstellen
+                {t("Konto erstellen", "Create account")}
               </Link>
               <button
                 onClick={() => setShowGuestGate(false)}
                 className="px-4 rounded-xl bg-zinc-100 text-sm font-medium"
               >
-                Später
+                {t("Später", "Later")}
               </button>
             </div>
           </div>
@@ -308,18 +312,24 @@ function ShoppingPage() {
       )}
       <header className="px-5 pt-8 pb-6">
         <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-1">
-          Wocheneinkauf
+          {t("Wocheneinkauf", "Weekly shop")}
         </p>
         <h1 className="text-2xl font-medium tracking-tight">
           {active
             ? openCount === 0 && items.length > 0
-              ? "Alles im Kasten."
+              ? t("Alles im Kasten.", "All done.")
               : items.length === 0
-                ? "Los geht's."
+                ? t("Los geht's.", "Let's go.")
                 : openCount === 1
-                  ? "Noch ein Ding zu deiner kompletten Liste."
-                  : `${openCount} Dinge fehlen noch.`
-            : "Deine Listen."}
+                  ? t(
+                      "Noch ein Ding zu deiner kompletten Liste.",
+                      "One more thing to complete your list.",
+                    )
+                  : t(
+                      `${openCount} Dinge fehlen noch.`,
+                      `${openCount} things still to go.`,
+                    )
+            : t("Deine Listen.", "Your lists.")}
         </h1>
       </header>
 
@@ -355,7 +365,7 @@ function ShoppingPage() {
             onClick={() => setShowNewForm((s) => !s)}
             className="shrink-0 rounded-full px-4 py-2 text-sm font-medium bg-accent-yellow text-ink flex items-center gap-1"
           >
-            <ListPlus className="size-4" /> Neue Liste
+            <ListPlus className="size-4" /> {t("Neue Liste", "New list")}
           </button>
         </div>
 
@@ -372,20 +382,20 @@ function ShoppingPage() {
             <input
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              placeholder="Listen-Name"
+              placeholder={t("Listen-Name", "List name")}
               className="flex-1 min-w-0 bg-zinc-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ink placeholder:text-zinc-400"
               autoFocus
             />
             <input
               value={newListTag}
               onChange={(e) => setNewListTag(e.target.value)}
-              placeholder="Tag (Grill …)"
+              placeholder={t("Tag (Grill …)", "Tag (BBQ …)")}
               className="w-28 bg-zinc-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ink placeholder:text-zinc-400"
             />
             <button
               type="submit"
               className="bg-ink text-canvas rounded-lg px-3 text-sm font-medium flex items-center"
-              aria-label="Liste erstellen"
+              aria-label={t("Liste erstellen", "Create list")}
             >
               <Check className="size-4" />
             </button>
@@ -411,16 +421,16 @@ function ShoppingPage() {
                 <button
                   onClick={shareActive}
                   className="p-2 rounded-lg bg-white ring-1 ring-black/5 hover:ring-black/10"
-                  aria-label="Liste teilen"
-                  title="Liste teilen"
+                  aria-label={t("Liste teilen", "Share list")}
+                  title={t("Liste teilen", "Share list")}
                 >
                   <Share2 className="size-4" />
                 </button>
                 <button
                   onClick={() => deleteList(active.id)}
                   className="p-2 rounded-lg bg-white ring-1 ring-black/5 hover:ring-black/10 text-zinc-500"
-                  aria-label="Liste löschen"
-                  title="Liste löschen"
+                  aria-label={t("Liste löschen", "Delete list")}
+                  title={t("Liste löschen", "Delete list")}
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -438,13 +448,13 @@ function ShoppingPage() {
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="z. B. Sonntagsbrötchen"
+                placeholder={t("z. B. Sonntagsbrötchen", "e.g. Sunday rolls")}
                 className="flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none placeholder:text-zinc-400"
               />
               <button
                 type="submit"
                 className="bg-ink text-canvas rounded-xl p-2 flex items-center justify-center"
-                aria-label="Hinzufügen"
+                aria-label={t("Hinzufügen", "Add")}
               >
                 <Plus className="size-4" />
               </button>
@@ -459,7 +469,7 @@ function ShoppingPage() {
                 {frequent.length > 0 && (
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">
-                      Häufig gekauft
+                      {t("Häufig gekauft", "Frequently bought")}
                     </p>
                     <div className="flex gap-2 flex-wrap">
                       {frequent.map((h) => (
@@ -478,7 +488,7 @@ function ShoppingPage() {
                 {aiSuggestions.data && aiSuggestions.data.length > 0 && (
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1">
-                      <Sparkles className="size-3" /> KI-Vorschläge
+                      <Sparkles className="size-3" /> {t("KI-Vorschläge", "AI suggestions")}
                     </p>
                     <div className="flex gap-2 flex-wrap">
                       {aiSuggestions.data.map((s) => (
@@ -499,7 +509,7 @@ function ShoppingPage() {
 
           <section className="px-5 mb-8">
             <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">
-              Presets zur Liste hinzufügen
+              {t("Presets zur Liste hinzufügen", "Add a preset to the list")}
             </h3>
             <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-2">
               {SHOPPING_PRESETS.map((p) => (
@@ -517,7 +527,10 @@ function ShoppingPage() {
           <section className="px-5">
             {items.length === 0 ? (
               <div className="bg-white rounded-2xl ring-1 ring-black/5 p-8 text-center text-sm text-zinc-500">
-                Diese Liste ist leer. Wähle ein Preset oder tippe etwas oben ein.
+                {t(
+                  "Diese Liste ist leer. Wähle ein Preset oder tippe etwas oben ein.",
+                  "This list is empty. Pick a preset or type something above.",
+                )}
               </div>
             ) : (
               <ul className="bg-white rounded-2xl ring-1 ring-black/5 divide-y divide-zinc-100">
@@ -526,7 +539,9 @@ function ShoppingPage() {
                     <button
                       onClick={() => toggle(item.id)}
                       aria-label={
-                        item.done ? "Als offen markieren" : "Als erledigt markieren"
+                        item.done
+                          ? t("Als offen markieren", "Mark as open")
+                          : t("Als erledigt markieren", "Mark as done")
                       }
                       className={`size-5 rounded-sm border flex items-center justify-center transition ${
                         item.done
@@ -566,7 +581,7 @@ function ShoppingPage() {
                           setPrice(item.id, v === "" ? undefined : Number(v));
                         }}
                         placeholder="0,00"
-                        aria-label={`Preis für ${item.text}`}
+                        aria-label={t(`Preis für ${item.text}`, `Price for ${item.text}`)}
                         className="w-16 text-right bg-zinc-50 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ink placeholder:text-zinc-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <span className="ml-1 text-xs text-zinc-400">€</span>
@@ -574,7 +589,7 @@ function ShoppingPage() {
                     <button
                       onClick={() => remove(item.id)}
                       className="text-zinc-300 hover:text-zinc-600"
-                      aria-label="Entfernen"
+                      aria-label={t("Entfernen", "Remove")}
                     >
                       <Trash2 className="size-4" />
                     </button>
@@ -586,7 +601,7 @@ function ShoppingPage() {
             {total > 0 && (
               <div className="mt-4 bg-ink text-canvas rounded-2xl px-5 py-4 flex items-center justify-between">
                 <span className="text-xs uppercase tracking-wider text-canvas/60">
-                  Summe
+                  {t("Summe", "Total")}
                 </span>
                 <span className="font-display text-2xl">{formatEUR(total)}</span>
               </div>
@@ -594,7 +609,7 @@ function ShoppingPage() {
 
             {items.length > 0 && openCount === 0 && (
               <div className="mt-4 bg-accent-yellow rounded-2xl px-5 py-4 text-center text-sm font-medium">
-                Alles erledigt für diese Woche 🎉
+                {t("Alles erledigt für diese Woche 🎉", "All done for this week 🎉")}
               </div>
             )}
           </section>
@@ -604,7 +619,9 @@ function ShoppingPage() {
       {!active && (
         <section className="px-5">
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-8 text-center text-sm text-zinc-500">
-            Noch keine Liste. Tippe oben auf <b>Neue Liste</b>, um zu starten.
+            {t("Noch keine Liste. Tippe oben auf ", "No list yet. Tap ")}
+            <b>{t("Neue Liste", "New list")}</b>
+            {t(", um zu starten.", " above to start.")}
           </div>
         </section>
       )}
