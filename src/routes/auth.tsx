@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/useAuth";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -31,6 +32,7 @@ function safeNext(next: string): string | null {
 
 function AuthPage() {
   const { user, hydrated } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const { next } = Route.useSearch();
   const safe = safeNext(next);
@@ -69,7 +71,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        setInfo("Konto erstellt. Du bist angemeldet.");
+        setInfo(t("Konto erstellt. Du bist angemeldet.", "Account created. You are signed in."));
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -78,7 +80,7 @@ function AuthPage() {
         if (error) throw error;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Da lief etwas schief.");
+      setError(err instanceof Error ? err.message : t("Da lief etwas schief.", "Something went wrong."));
     } finally {
       setLoading(false);
     }
@@ -90,7 +92,7 @@ function AuthPage() {
       redirect_uri: window.location.origin + (safe ?? "/account"),
     });
     if (result.error) {
-      setError(result.error.message ?? "Google-Anmeldung fehlgeschlagen.");
+      setError(result.error.message ?? t("Google-Anmeldung fehlgeschlagen.", "Google sign-in failed."));
     }
   };
 
@@ -100,26 +102,26 @@ function AuthPage() {
         to="/account"
         className="inline-flex items-center gap-1 text-sm text-zinc-500 mb-6"
       >
-        <ArrowLeft className="size-4" /> Zurück
+        <ArrowLeft className="size-4" /> {t("Zurück", "Back")}
       </Link>
       <h1 className="text-3xl font-medium tracking-tight mb-2">
-        {mode === "signin" ? "Willkommen zurück." : "Konto erstellen."}
+        {mode === "signin" ? t("Willkommen zurück.", "Welcome back.") : t("Konto erstellen.", "Create account.")}
       </h1>
       <p className="text-sm text-zinc-500 mb-8">
-        Sichere deine Listen, Favoriten und gelöschte Listen für 30 Tage.
+        {t("Sichere deine Listen, Favoriten und gelöschte Listen für 30 Tage.", "Save your lists, favourites, and deleted lists for 30 days.")}
       </p>
 
       <button
         onClick={google}
         className="w-full bg-white ring-1 ring-black/10 rounded-xl py-3 text-sm font-semibold mb-3 hover:ring-black/20"
       >
-        Mit Google fortfahren
+        {t("Mit Google fortfahren", "Continue with Google")}
       </button>
 
       <div className="flex items-center gap-3 my-4">
         <div className="flex-1 h-px bg-black/10" />
         <span className="text-[10px] uppercase tracking-wider text-zinc-400">
-          oder E-Mail
+          {t("oder E-Mail", "or email")}
         </span>
         <div className="flex-1 h-px bg-black/10" />
       </div>
@@ -131,7 +133,7 @@ function AuthPage() {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Dein Name"
+            placeholder={t("Dein Name", "Your name")}
             maxLength={80}
             className="w-full bg-white ring-1 ring-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-ink"
           />
@@ -150,7 +152,7 @@ function AuthPage() {
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Passwort (min. 6 Zeichen)"
+          placeholder={t("Passwort (min. 6 Zeichen)", "Password (min. 6 characters)")}
           className="w-full bg-white ring-1 ring-black/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-ink"
         />
         {error && <p className="text-xs text-red-600">{error}</p>}
@@ -161,20 +163,20 @@ function AuthPage() {
           className="w-full bg-ink text-canvas rounded-xl py-3 text-sm font-semibold disabled:opacity-50"
         >
           {loading
-            ? "Bitte warten…"
+            ? t("Bitte warten…", "Please wait…")
             : mode === "signin"
-              ? "Anmelden"
-              : "Konto erstellen"}
+              ? t("Anmelden", "Sign in")
+              : t("Konto erstellen", "Create account")}
         </button>
       </form>
 
       <p className="text-center text-xs text-zinc-500 mt-6">
-        {mode === "signin" ? "Noch kein Konto?" : "Bereits ein Konto?"}{" "}
+        {mode === "signin" ? t("Noch kein Konto?", "No account yet?") : t("Bereits ein Konto?", "Already have an account?")}{" "}
         <button
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           className="underline"
         >
-          {mode === "signin" ? "Registrieren" : "Anmelden"}
+          {mode === "signin" ? t("Registrieren", "Register") : t("Anmelden", "Sign in")}
         </button>
       </p>
     </div>
