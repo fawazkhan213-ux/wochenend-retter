@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   LogOut,
@@ -16,6 +16,7 @@ import {
   FileText,
   ChevronDown,
   Share2,
+  Languages,
 } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -72,10 +73,96 @@ function AccountPage() {
 
       <FeedbackCard />
       <ShareAppCard />
+      <LanguageCard />
       <PrivacySecurityCard />
 
       <BottomNav />
     </div>
+  );
+}
+
+type Lang = "de" | "en";
+
+const LANG_LABELS: Record<Lang, { name: string; flag: string; selected: string }> = {
+  de: { name: "Deutsch", flag: "🇩🇪", selected: "Ausgewählt" },
+  en: { name: "English", flag: "🇬🇧", selected: "Selected" },
+};
+
+function LanguageCard() {
+  const [open, setOpen] = useState(false);
+  const [lang, setLang] = useLocalStorage<Lang>("sonntag.lang", "de");
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = lang;
+    }
+  }, [lang]);
+
+  const heading = lang === "de" ? "Sprache" : "Language";
+  const subtitle =
+    lang === "de"
+      ? "Wähle die Sprache der App."
+      : "Choose the app language.";
+  const currentLabel = LANG_LABELS[lang];
+
+  return (
+    <section className="px-5 mb-10">
+      <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <Languages className="size-3.5" /> {heading}
+      </h3>
+      <div className="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="w-full flex items-center gap-3 px-4 py-3 text-left"
+        >
+          <div className="size-8 rounded-lg bg-zinc-50 flex items-center justify-center ring-1 ring-black/5 text-base">
+            {currentLabel.flag}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium">{currentLabel.name}</div>
+            <div className="text-[11px] text-zinc-500">{subtitle}</div>
+          </div>
+          <ChevronDown
+            className={`size-4 text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </button>
+        {open && (
+          <ul className="border-t border-zinc-100 divide-y divide-zinc-100 animate-fade-in">
+            {(Object.keys(LANG_LABELS) as Lang[]).map((code) => {
+              const info = LANG_LABELS[code];
+              const isActive = code === lang;
+              return (
+                <li key={code}>
+                  <button
+                    onClick={() => {
+                      setLang(code);
+                      setOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50"
+                  >
+                    <span className="text-xl leading-none">{info.flag}</span>
+                    <span className="flex-1 text-sm font-medium">
+                      {info.name}
+                    </span>
+                    {isActive && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-accent-yellow text-ink">
+                        {info.selected}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+      <p className="text-[10px] text-zinc-400 mt-2 px-1">
+        {lang === "de"
+          ? "Weitere Sprachen folgen bald."
+          : "More languages coming soon."}
+      </p>
+    </section>
   );
 }
 
