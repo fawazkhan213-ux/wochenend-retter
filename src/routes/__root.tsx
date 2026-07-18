@@ -16,6 +16,7 @@ import { InstallPrompt } from "../components/InstallPrompt";
 import { SplashScreen } from "../components/SplashScreen";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { TourOverlay } from "../components/TourOverlay";
+import { I18nProvider } from "../lib/i18n";
 
 function NotFoundComponent() {
   return (
@@ -173,14 +174,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <div key={pathname} className="animate-fade-in">
-        <Outlet />
-      </div>
-      <InstallPrompt />
-      <SplashScreen />
-      <OfflineBanner />
-      <TourOverlay />
+      <I18nProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <div key={pathname} className="animate-fade-in">
+          <Outlet />
+        </div>
+        <InstallPrompt />
+        <SplashScreen />
+        <OfflineBanner />
+        <TourOverlay />
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

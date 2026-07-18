@@ -12,6 +12,7 @@ import { useHydrated } from "@/lib/useHydrated";
 import { getActiveList, type ShoppingList } from "@/lib/shopping-lists";
 import { getSundayWeather } from "@/lib/weather.functions";
 import { useAuth } from "@/lib/useAuth";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   component: Dashboard,
@@ -26,6 +27,7 @@ type CountdownUnit = "sec" | "hours" | "days";
 function Dashboard() {
   const hydrated = useHydrated();
   const { user } = useAuth();
+  const { t, lang } = useI18n();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     setNow(new Date());
@@ -42,12 +44,12 @@ function Dashboard() {
   const hour = now.getHours();
   const greeting =
     hour < 5
-      ? "Gute Nacht"
+      ? t("Gute Nacht", "Good night")
       : hour < 11
-        ? "Guten Morgen"
+        ? t("Guten Morgen", "Good morning")
         : hour < 18
-          ? "Guten Tag"
-          : "Guten Abend";
+          ? t("Guten Tag", "Hello")
+          : t("Guten Abend", "Good evening");
   const [lists] = useLocalStorage<ShoppingList[]>("sonntag.lists", []);
   const [activeId] = useLocalStorage<string | null>("sonntag.activeListId", null);
   const active = getActiveList(lists, activeId);
@@ -115,15 +117,19 @@ function Dashboard() {
               {greeting}
               {displayName ? `, ${displayName}` : ""}.{" "}
               {status.isSunday
-                ? "Heute ist Ruhetag."
+                ? t("Heute ist Ruhetag.", "Today is a day of rest.")
                 : status.isSaturday
-                  ? "Heute wird eingekauft."
-                  : "Bald ist Wochenende."}
+                  ? t("Heute wird eingekauft.", "Today is for shopping.")
+                  : t("Bald ist Wochenende.", "The weekend is almost here.")}
             </h1>
           </div>
           <div className="size-10 rounded-full bg-zinc-200 ring-1 ring-black/5 flex items-center justify-center text-sm font-display italic text-zinc-500">
             {hydrated
-              ? now.toLocaleDateString("de-DE", { weekday: "short" }).replace(".", "")
+              ? now
+                  .toLocaleDateString(lang === "en" ? "en-GB" : "de-DE", {
+                    weekday: "short",
+                  })
+                  .replace(".", "")
               : "—"}
           </div>
         </div>
@@ -139,13 +145,15 @@ function Dashboard() {
                 }`}
               />
               <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
-                {status.isSunday ? "Sonntagsruhe aktiv" : "Ladenschluss"}
+                {status.isSunday
+                  ? t("Sonntagsruhe aktiv", "Sunday rest active")
+                  : t("Ladenschluss", "Closing time")}
               </span>
             </div>
             <div
               className="flex items-center rounded-full bg-white/5 ring-1 ring-white/10 p-0.5 text-[10px] font-semibold uppercase tracking-wider"
               role="group"
-              aria-label="Einheit wählen"
+              aria-label={t("Einheit wählen", "Select unit")}
             >
               {(["sec", "hours", "days"] as CountdownUnit[]).map((u) => (
                 <button
@@ -157,7 +165,11 @@ function Dashboard() {
                       : "text-zinc-400 hover:text-white"
                   }`}
                 >
-                  {u === "sec" ? "Sek" : u === "hours" ? "Std" : "Tage"}
+                  {u === "sec"
+                    ? t("Sek", "Sec")
+                    : u === "hours"
+                      ? t("Std", "Hrs")
+                      : t("Tage", "Days")}
                 </button>
               ))}
             </div>
@@ -186,7 +198,7 @@ function Dashboard() {
                   : "--"}
               </span>
               <span className="font-display text-2xl text-zinc-500">
-                {unit === "hours" ? "Std" : "Tage"}
+                {unit === "hours" ? t("Std", "Hrs") : t("Tage", "Days")}
               </span>
             </div>
           )}
@@ -205,13 +217,19 @@ function Dashboard() {
                 </span>
               </>
             ) : (
-              <span>Wetter wird geladen …</span>
+              <span>{t("Wetter wird geladen …", "Loading weather …")}</span>
             )}
           </div>
           <p className="mt-3 text-sm text-zinc-400 max-w-[35ch] text-pretty">
             {status.isSunday
-              ? "Ruhezeit bis Montag früh. Kein Rasenmähen, kein Bohren, kein Waschen."
-              : "Bis Samstag 20:00 Uhr haben die meisten Supermärkte geöffnet. Danach beginnt die große Sonntagsruhe."}
+              ? t(
+                  "Ruhezeit bis Montag früh. Kein Rasenmähen, kein Bohren, kein Waschen.",
+                  "Quiet time until Monday morning. No mowing, no drilling, no laundry.",
+                )
+              : t(
+                  "Bis Samstag 20:00 Uhr haben die meisten Supermärkte geöffnet. Danach beginnt die große Sonntagsruhe.",
+                  "Most supermarkets are open until 8pm Saturday. After that the big Sunday quiet begins.",
+                )}
           </p>
         </div>
       </section>
@@ -222,14 +240,17 @@ function Dashboard() {
           className="block bg-white rounded-[20px] p-5 ring-1 ring-black/5 shadow-sm hover:ring-black/10 transition"
         >
           <div className="flex justify-between items-start mb-4">
-            <h2 className="font-semibold">Einkaufsliste</h2>
+            <h2 className="font-semibold">{t("Einkaufsliste", "Shopping list")}</h2>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 uppercase">
               {panicLabel(status.panicLevel)}
             </span>
           </div>
           {items.length === 0 ? (
             <p className="text-sm text-zinc-500 mb-4">
-              Noch nichts auf der Liste. Ein Preset wählen oder Artikel hinzufügen.
+              {t(
+                "Noch nichts auf der Liste. Ein Preset wählen oder Artikel hinzufügen.",
+                "Nothing on the list yet. Pick a preset or add items.",
+              )}
             </p>
           ) : (
             <ul className="space-y-3 mb-4">
@@ -256,12 +277,15 @@ function Dashboard() {
           <div className="w-full bg-accent-yellow text-ink font-medium text-sm py-2 px-3 rounded-lg ring-1 ring-accent-yellow flex items-center justify-center gap-2">
             <span>
               {openCount === 0 && items.length > 0
-                ? "Alles erledigt"
+                ? t("Alles erledigt", "All done")
                 : items.length === 0
-                  ? "Liste starten"
+                  ? t("Liste starten", "Start a list")
                   : openCount === 1
-                    ? "Noch 1 offen — Liste öffnen"
-                    : `${openCount} offen — Liste öffnen`}
+                    ? t("Noch 1 offen — Liste öffnen", "1 left — open list")
+                    : t(
+                        `${openCount} offen — Liste öffnen`,
+                        `${openCount} left — open list`,
+                      )}
             </span>
           </div>
         </Link>
@@ -270,10 +294,12 @@ function Dashboard() {
       <section className="px-5 mb-10">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
-            {recentCategories.length > 0 ? "Zuletzt geöffnet" : "Sonntag offen"}
+            {recentCategories.length > 0
+              ? t("Zuletzt geöffnet", "Recently opened")
+              : t("Sonntag offen", "Open Sunday")}
           </h3>
           <Link to="/open-sunday" className="text-xs text-ink/60 hover:text-ink">
-            alle →
+            {t("alle", "all")} →
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -303,7 +329,7 @@ function Dashboard() {
               onClick={() => setShowAllCategories((s) => !s)}
               className="flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-ink px-3 py-1.5 rounded-full bg-white ring-1 ring-black/5"
             >
-              {showAllCategories ? "Weniger" : "Mehr anzeigen"}
+              {showAllCategories ? t("Weniger", "Less") : t("Mehr anzeigen", "Show more")}
               <ChevronDown
                 className={`size-3 transition-transform ${
                   showAllCategories ? "rotate-180" : ""
@@ -329,11 +355,16 @@ function Dashboard() {
           />
           <div className="p-5">
             <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium">Sonntagsplan</h4>
-              <span className="text-sm text-zinc-500">Wetter checken →</span>
+              <h4 className="font-medium">{t("Sonntagsplan", "Sunday plan")}</h4>
+              <span className="text-sm text-zinc-500">
+                {t("Wetter checken", "Check the weather")} →
+              </span>
             </div>
             <p className="text-sm text-zinc-600 leading-normal max-w-[48ch] text-pretty">
-              Was tun mit dem Ruhetag? Ein paar Vorschläge, abhängig vom Wetter.
+              {t(
+                "Was tun mit dem Ruhetag? Ein paar Vorschläge, abhängig vom Wetter.",
+                "What to do with the day of rest? A few suggestions, depending on the weather.",
+              )}
             </p>
           </div>
         </Link>

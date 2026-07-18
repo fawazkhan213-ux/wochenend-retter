@@ -23,6 +23,7 @@ import {
   reverseGeocode,
   type NearbyPlace,
 } from "@/lib/places.functions";
+import { useI18n } from "@/lib/i18n";
 
 type Favorite = {
   id: string;
@@ -59,6 +60,7 @@ function newId() {
 
 function OpenSundayPage() {
   const geo = useGeolocation();
+  const { t } = useI18n();
   const [city] = useLocalStorage<string>("sonntag.city", "Berlin");
   const [activeCat, setActiveCat] = useState<string>(SUNDAY_CATEGORIES[0]!.id);
   const [favs, setFavs] = useLocalStorage<Favorite[]>("sonntag.favs", []);
@@ -304,16 +306,16 @@ function OpenSundayPage() {
     <div className="min-h-screen bg-canvas text-ink font-sans pb-32 overflow-x-hidden">
       <header className="px-5 pt-8 pb-6">
         <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-1">
-          Sonntag in Deutschland
+          {t("Sonntag in Deutschland", "Sunday in Germany")}
         </p>
         <h1 className="text-2xl font-medium tracking-tight text-balance">
-          Was in deiner Nähe trotzdem aufhat.
+          {t("Was in deiner Nähe trotzdem aufhat.", "What's still open near you.")}
         </h1>
         <Link
           to="/verkaufsoffene-sonntage"
           className="inline-block mt-3 text-xs font-semibold uppercase tracking-wider text-ink underline"
         >
-          Verkaufsoffene Sonntage 2026 →
+          {t("Verkaufsoffene Sonntage 2026 →", "Shopping Sundays 2026 →")}
         </Link>
       </header>
 
@@ -326,18 +328,23 @@ function OpenSundayPage() {
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium">
               {geo.coords
-                ? "Standort aktiv"
+                ? t("Standort aktiv", "Location active")
                 : geo.loading
-                  ? "Standort wird ermittelt…"
-                  : "Standort teilen für Nahe-Suche"}
+                  ? t("Standort wird ermittelt…", "Locating…")
+                  : t("Standort teilen für Nahe-Suche", "Share location for nearby search")}
             </div>
             <div className="text-xs text-zinc-500 truncate">
               {geo.error
                 ? geo.error
                 : geo.coords
                   ? placeLabel.data?.label ??
-                    (placeLabel.isLoading ? "Ort wird erkannt …" : `${geo.coords.lat.toFixed(3)}, ${geo.coords.lng.toFixed(3)}`)
-                  : "Google Maps zeigt Läden im Umkreis von 2,5 km."}
+                    (placeLabel.isLoading
+                      ? t("Ort wird erkannt …", "Detecting place…")
+                      : `${geo.coords.lat.toFixed(3)}, ${geo.coords.lng.toFixed(3)}`)
+                  : t(
+                      "Google Maps zeigt Läden im Umkreis von 2,5 km.",
+                      "Google Maps shows shops within 2.5 km.",
+                    )}
             </div>
           </div>
           <button
@@ -346,7 +353,7 @@ function OpenSundayPage() {
             className="bg-ink text-canvas rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-1 disabled:opacity-50"
           >
             <LocateFixed className="size-3.5" />
-            {geo.coords ? "Aktualisieren" : "Freigeben"}
+            {geo.coords ? t("Aktualisieren", "Refresh") : t("Freigeben", "Share")}
           </button>
         </div>
       </section>
@@ -360,7 +367,10 @@ function OpenSundayPage() {
             <input
               value={storeQuery}
               onChange={(e) => setStoreQuery(e.target.value)}
-              placeholder="Laden suchen — z.B. Lidl, Apotheke, Späti"
+              placeholder={t(
+                "Laden suchen — z.B. Lidl, Apotheke, Späti",
+                "Search shops — e.g. Lidl, pharmacy, kiosk",
+              )}
               className="flex-1 bg-transparent text-sm py-2 focus:outline-none placeholder:text-zinc-400"
             />
             {storeQuery && (
@@ -374,19 +384,19 @@ function OpenSundayPage() {
           </div>
           {debouncedStoreQuery.length >= 2 && !geo.coords && (
             <div className="text-xs text-zinc-500 px-2 pb-2 pt-1">
-              Standort freigeben, um in deiner Nähe zu suchen.
+              {t("Standort freigeben, um in deiner Nähe zu suchen.", "Share your location to search nearby.")}
             </div>
           )}
           {debouncedStoreQuery.length >= 2 && geo.coords && (
             <div className="mt-2 border-t border-zinc-100 pt-2">
               {storeSearch.isLoading && (
                 <div className="text-xs text-zinc-500 px-2 py-3">
-                  Suche „{debouncedStoreQuery}“ in deiner Nähe …
+                  {t(`Suche „${debouncedStoreQuery}“ in deiner Nähe …`, `Searching "${debouncedStoreQuery}" nearby…`)}
                 </div>
               )}
               {!storeSearch.isLoading && rankedStoreSearch.length === 0 && (
                 <div className="text-xs text-zinc-500 px-2 py-3">
-                  Keine Treffer im 5-km-Umkreis.
+                  {t("Keine Treffer im 5-km-Umkreis.", "No matches within 5 km.")}
                 </div>
               )}
               {rankedStoreSearch.length > 0 && (
@@ -409,7 +419,7 @@ function OpenSundayPage() {
                         rel="noreferrer"
                         className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1 shrink-0"
                       >
-                        <Navigation className="size-3" /> Route
+                        <Navigation className="size-3" /> {t("Route", "Route")}
                       </a>
                     </li>
                   ))}
@@ -457,30 +467,30 @@ function OpenSundayPage() {
       {/* Nearby list */}
       <section className="px-5 mb-10">
         <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3">
-          In deiner Nähe
+          {t("In deiner Nähe", "Near you")}
         </h2>
 
         {!geo.coords && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500">
-            Standort freigeben, um {cat.name}s in der Nähe zu sehen.
+            {t(`Standort freigeben, um ${cat.name}s in der Nähe zu sehen.`, `Share location to see ${cat.name}s near you.`)}
           </div>
         )}
 
         {geo.coords && nearby.isLoading && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500">
-            Suche {cat.name}s in der Nähe…
+            {t(`Suche ${cat.name}s in der Nähe…`, `Searching for ${cat.name}s nearby…`)}
           </div>
         )}
 
         {geo.coords && nearby.isError && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-red-600">
-            Konnte nichts laden. Später nochmal versuchen.
+            {t("Konnte nichts laden. Später nochmal versuchen.", "Could not load. Try again later.")}
           </div>
         )}
 
         {geo.coords && !nearby.isLoading && withDistance.length === 0 && !nearby.isError && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-center text-sm text-zinc-500">
-            Nichts im 2,5-km-Umkreis. Versuche eine andere Kategorie.
+            {t("Nichts im 2,5-km-Umkreis. Versuche eine andere Kategorie.", "Nothing within 2.5 km. Try another category.")}
           </div>
         )}
 
@@ -506,13 +516,13 @@ function OpenSundayPage() {
                     rel="noreferrer"
                     className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1"
                   >
-                    <Navigation className="size-3" /> Route
+                    <Navigation className="size-3" /> {t("Route", "Route")}
                   </a>
                   <button
                     onClick={() => saveFromNearby(p)}
                     className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-accent-yellow text-ink"
                   >
-                    merken
+                    {t("merken", "save")}
                   </button>
                 </div>
               </li>
@@ -524,7 +534,7 @@ function OpenSundayPage() {
       {/* Favorites */}
       <section className="px-5">
         <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4">
-          Deine Favoriten
+          {t("Deine Favoriten", "Your favourites")}
         </h2>
 
         {hydrated && !isAuthenticated && (
@@ -534,17 +544,19 @@ function OpenSundayPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-semibold mb-0.5">
-                Favoriten geräteübergreifend sichern
+                {t("Favoriten geräteübergreifend sichern", "Sync favourites across devices")}
               </div>
               <p className="text-xs text-zinc-500 mb-3">
-                Erstelle ein Konto, um Lieblings-Läden zu speichern und überall
-                wieder abzurufen.
+                {t(
+                  "Erstelle ein Konto, um Lieblings-Läden zu speichern und überall wieder abzurufen.",
+                  "Create an account to save your favourite shops and access them anywhere.",
+                )}
               </p>
               <Link
                 to="/account"
                 className="inline-block bg-ink text-canvas text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-lg"
               >
-                Konto erstellen
+                {t("Konto erstellen", "Create account")}
               </Link>
             </div>
           </div>
@@ -553,17 +565,17 @@ function OpenSundayPage() {
         {isAuthenticated && preferredBrand && geo.coords && (
           <div className="mb-5">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 px-1 flex items-center gap-1">
-              <Sparkles className="size-3" /> Dein üblicher Laden ·{" "}
+              <Sparkles className="size-3" /> {t("Dein üblicher Laden", "Your usual spot")} ·{" "}
               <span className="capitalize">{preferredBrand}</span>
             </p>
             {preferredPlaces.isLoading && (
               <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
-                Suche „{preferredBrand}“ in deiner Nähe …
+                {t(`Suche „${preferredBrand}“ in deiner Nähe …`, `Searching "${preferredBrand}" nearby…`)}
               </div>
             )}
             {!preferredPlaces.isLoading && rankedPreferred.length === 0 && (
               <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
-                Keine Filialen in 5 km gefunden.
+                {t("Keine Filialen in 5 km gefunden.", "No branches found within 5 km.")}
               </div>
             )}
             {rankedPreferred.length > 0 && (
@@ -583,7 +595,7 @@ function OpenSundayPage() {
                       rel="noreferrer"
                       className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1 shrink-0"
                     >
-                      <Navigation className="size-3" /> Route
+                      <Navigation className="size-3" /> {t("Route", "Route")}
                     </a>
                   </li>
                 ))}
@@ -601,7 +613,7 @@ function OpenSundayPage() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Späti Rosenthaler Ecke"
+            placeholder={t("Späti Rosenthaler Ecke", "Kiosk at Rosenthaler corner")}
             className="w-full bg-zinc-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ink placeholder:text-zinc-400"
           />
           <div className="flex gap-2">
@@ -619,7 +631,7 @@ function OpenSundayPage() {
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="bis 22:00"
+              placeholder={t("bis 22:00", "until 22:00")}
               className="flex-1 bg-zinc-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ink placeholder:text-zinc-400"
             />
           </div>
@@ -627,23 +639,23 @@ function OpenSundayPage() {
             type="submit"
             className="w-full bg-accent-yellow text-ink rounded-lg py-2 text-sm font-semibold flex items-center justify-center gap-2"
           >
-            <Plus className="size-4" /> Favorit speichern
+            <Plus className="size-4" /> {t("Favorit speichern", "Save favourite")}
           </button>
         </form>
 
         {debouncedName.length >= 2 && geo.coords && (
           <div className="mb-4">
             <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-2 px-1">
-              Nächste Treffer für „{debouncedName}“
+              {t(`Nächste Treffer für „${debouncedName}“`, `Nearest matches for "${debouncedName}"`)}
             </div>
             {nameSuggest.isLoading && (
               <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
-                Suche in deiner Nähe …
+                {t("Suche in deiner Nähe …", "Searching nearby…")}
               </div>
             )}
             {!nameSuggest.isLoading && rankedSuggest.length === 0 && (
               <div className="bg-white rounded-2xl ring-1 ring-black/5 p-4 text-xs text-zinc-500">
-                Keine Treffer im 5-km-Umkreis.
+                {t("Keine Treffer im 5-km-Umkreis.", "No matches within 5 km.")}
               </div>
             )}
             {rankedSuggest.length > 0 && (
@@ -664,13 +676,13 @@ function OpenSundayPage() {
                         rel="noreferrer"
                         className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1"
                       >
-                        <Navigation className="size-3" /> Route
+                        <Navigation className="size-3" /> {t("Route", "Route")}
                       </a>
                       <button
                         onClick={() => saveSuggestion(p)}
                         className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-accent-yellow text-ink"
                       >
-                        merken
+                        {t("merken", "save")}
                       </button>
                     </div>
                   </li>
@@ -682,7 +694,9 @@ function OpenSundayPage() {
 
         {favs.length === 0 ? (
           <p className="text-sm text-zinc-500 text-center py-4">
-            Noch keine Favoriten. Tippe oben auf <b>merken</b> oder speichere manuell.
+            {t("Noch keine Favoriten. Tippe oben auf ", "No favourites yet. Tap ")}
+            <b>{t("merken", "save")}</b>
+            {t(" oder speichere manuell.", " above or save manually.")}
           </p>
         ) : (
           <ul className="bg-white rounded-2xl ring-1 ring-black/5 divide-y divide-zinc-100">
@@ -706,14 +720,14 @@ function OpenSundayPage() {
                     target="_blank"
                     rel="noreferrer"
                     className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-ink text-canvas flex items-center gap-1"
-                    aria-label="Route öffnen"
+                    aria-label={t("Route öffnen", "Open route")}
                   >
-                    <Navigation className="size-3" /> Route
+                    <Navigation className="size-3" /> {t("Route", "Route")}
                   </a>
                   <button
                     onClick={() => remove(f.id)}
                     className="text-zinc-300 hover:text-zinc-600"
-                    aria-label="Entfernen"
+                    aria-label={t("Entfernen", "Remove")}
                   >
                     <Trash2 className="size-4" />
                   </button>
