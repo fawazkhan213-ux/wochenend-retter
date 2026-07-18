@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 // First-run guided tour. Six pages: warm hello + one page per bottom-nav
 // section. Steps 2-6 dim the whole screen and highlight the matching tab.
@@ -8,39 +9,65 @@ import { ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
 const KEY = "sonntag.tourDismissed";
 
 type Step = {
-  title: string;
-  body: string;
-  targetTourId?: string; // matches data-tour-id on BottomNav links
+  titleDe: string;
+  titleEn: string;
+  bodyDe: string;
+  bodyEn: string;
+  targetTourId?: string;
 };
 
 const STEPS: Step[] = [
   {
-    title: "Willkommen beim Wochenend-Retter",
-    body: "Kurze Tour durch die App – damit du am Sonntag nie wieder ratlos vorm Kühlschrank stehst. Fünf Bereiche, in einer Minute erklärt.",
+    titleDe: "Willkommen beim Wochenend-Retter",
+    titleEn: "Welcome to Wochenend-Retter",
+    bodyDe:
+      "Kurze Tour durch die App – damit du am Sonntag nie wieder ratlos vorm Kühlschrank stehst. Fünf Bereiche, in einer Minute erklärt.",
+    bodyEn:
+      "A quick tour so you never stand clueless in front of the fridge on Sunday again. Five sections, explained in a minute.",
   },
   {
-    title: "Start",
-    body: "Deine Übersicht: Ladenschluss-Countdown, das Wetter fürs Wochenende und ein Blick auf deine Panik-Stufe.",
+    titleDe: "Start",
+    titleEn: "Home",
+    bodyDe:
+      "Deine Übersicht: Ladenschluss-Countdown, das Wetter fürs Wochenende und ein Blick auf deine Panik-Stufe.",
+    bodyEn:
+      "Your overview: closing-time countdown, weekend weather and a glance at your panic level.",
     targetTourId: "/",
   },
   {
-    title: "Einkauf",
-    body: "Erstelle Einkaufslisten, hake Dinge ab und sieh sofort, wie viele Sachen noch fehlen. Alles bleibt lokal auf deinem Gerät.",
+    titleDe: "Einkauf",
+    titleEn: "Shopping",
+    bodyDe:
+      "Erstelle Einkaufslisten, hake Dinge ab und sieh sofort, wie viele Sachen noch fehlen. Alles bleibt lokal auf deinem Gerät.",
+    bodyEn:
+      "Create lists, check items off and see how many are left. Everything stays local on your device.",
     targetTourId: "/shopping",
   },
   {
-    title: "Offen",
-    body: "Zeigt Läden in deiner Nähe, die gerade wirklich geöffnet haben – Tankstellen, Bäckereien, Kioske. Perfekt für den Sonntag.",
+    titleDe: "Offen",
+    titleEn: "Open",
+    bodyDe:
+      "Zeigt Läden in deiner Nähe, die gerade wirklich geöffnet haben – Tankstellen, Bäckereien, Kioske. Perfekt für den Sonntag.",
+    bodyEn:
+      "Shows shops near you that are actually open right now — gas stations, bakeries, kiosks. Perfect for Sunday.",
     targetTourId: "/open-sunday",
   },
   {
-    title: "Plan",
-    body: "Plane dein Wochenende: Wetter, Orte in der Nähe und Ausflugsideen. Ein Tipp auf „Aktualisieren“ frischt alles auf.",
+    titleDe: "Plan",
+    titleEn: "Plan",
+    bodyDe:
+      "Plane dein Wochenende: Wetter, Orte in der Nähe und Ausflugsideen. Ein Tipp auf „Aktualisieren“ frischt alles auf.",
+    bodyEn:
+      "Plan your weekend: weather, nearby places and outing ideas. A tap on \u201CRefresh\u201D updates it all.",
     targetTourId: "/plan",
   },
   {
-    title: "Konto",
-    body: "Dein Profil, App teilen, Datenschutz & Sicherheit. Hier findest du außerdem den Vorschlag-Button für Feedback.",
+    titleDe: "Konto",
+    titleEn: "Account",
+    bodyDe:
+      "Dein Profil, App teilen, Datenschutz & Sicherheit. Hier findest du außerdem den Vorschlag-Button für Feedback.",
+    bodyEn:
+      "Your profile, share the app, privacy & security. You'll also find the feedback button here.",
     targetTourId: "/account",
   },
 ];
@@ -48,6 +75,7 @@ const STEPS: Step[] = [
 type Rect = { top: number; left: number; width: number; height: number };
 
 export function TourOverlay() {
+  const { t } = useI18n();
   const [visible, setVisible] = useState(false);
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
@@ -145,9 +173,11 @@ export function TourOverlay() {
           </div>
 
           <h2 className="font-display text-2xl leading-tight text-ink mb-2">
-            {step.title}
+            {t(step.titleDe, step.titleEn)}
           </h2>
-          <p className="text-sm text-zinc-600 mb-5">{step.body}</p>
+          <p className="text-sm text-zinc-600 mb-5">
+            {t(step.bodyDe, step.bodyEn)}
+          </p>
 
           {/* progress dots */}
           <div className="flex gap-1.5 mb-5">
@@ -166,14 +196,14 @@ export function TourOverlay() {
               onClick={dismiss}
               className="w-full bg-ink text-canvas rounded-xl py-3 text-sm font-semibold"
             >
-              Nicht mehr anzeigen &amp; loslegen
+              {t("Nicht mehr anzeigen & loslegen", "Don't show again & get started")}
             </button>
           ) : (
             <div className="flex items-center gap-2">
               {!isFirst && (
                 <button
                   onClick={() => setIndex((i) => Math.max(0, i - 1))}
-                  aria-label="Zurück"
+                  aria-label={t("Zurück", "Back")}
                   className="size-11 shrink-0 rounded-xl bg-zinc-100 flex items-center justify-center text-ink"
                 >
                   <ChevronLeft className="size-5" />
@@ -183,7 +213,7 @@ export function TourOverlay() {
                 onClick={() => setIndex((i) => Math.min(STEPS.length - 1, i + 1))}
                 className="flex-1 bg-ink text-canvas rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-1"
               >
-                Weiter <ChevronRight className="size-4" />
+                {t("Weiter", "Next")} <ChevronRight className="size-4" />
               </button>
             </div>
           )}
