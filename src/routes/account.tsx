@@ -166,6 +166,7 @@ type PolicySection = "privacy" | "security" | "imprint";
 
 function PrivacySecurityCard() {
   const [open, setOpen] = useState<PolicySection | null>(null);
+  const { t } = useI18n();
   const toggle = (s: PolicySection) => setOpen((cur) => (cur === s ? null : s));
 
   const items: {
@@ -176,58 +177,60 @@ function PrivacySecurityCard() {
   }[] = [
     {
       id: "privacy",
-      label: "Datenschutz",
+      label: t("Datenschutz", "Privacy"),
       Icon: Shield,
       body: (
         <>
           <p>
-            Wochenend-Retter speichert deine Einkaufslisten, Favoriten und
-            Einstellungen zuerst lokal auf deinem Gerät. Nur wenn du ein Konto
-            anlegst, werden gelöschte Listen 30 Tage lang serverseitig
-            aufbewahrt, damit du sie wiederherstellen kannst.
+            {t(
+              "Wochenend-Retter speichert deine Einkaufslisten, Favoriten und Einstellungen zuerst lokal auf deinem Gerät. Nur wenn du ein Konto anlegst, werden gelöschte Listen 30 Tage lang serverseitig aufbewahrt, damit du sie wiederherstellen kannst.",
+              "Wochenend-Retter first stores your lists, favourites and settings locally on your device. Only if you create an account are deleted lists kept for 30 days on our servers so you can restore them.",
+            )}
           </p>
           <p>
-            Für Orte in deiner Nähe fragen wir – nur mit deiner Zustimmung –
-            deinen Standort ab und schicken die Koordinaten an Google Maps.
-            Wetterdaten kommen von Open-Meteo. Es gibt kein Tracking, keine
-            Werbung, keine Weitergabe an Dritte.
+            {t(
+              "Für Orte in deiner Nähe fragen wir – nur mit deiner Zustimmung – deinen Standort ab und schicken die Koordinaten an Google Maps. Wetterdaten kommen von Open-Meteo. Es gibt kein Tracking, keine Werbung, keine Weitergabe an Dritte.",
+              "For nearby places we ask — only with your consent — for your location and send the coordinates to Google Maps. Weather comes from Open-Meteo. No tracking, no ads, no sharing with third parties.",
+            )}
           </p>
         </>
       ),
     },
     {
       id: "security",
-      label: "Sicherheit",
+      label: t("Sicherheit", "Security"),
       Icon: Lock,
       body: (
         <>
           <p>
-            Die App läuft komplett über verschlüsseltes HTTPS. Konten werden
-            über unseren Backend-Anbieter mit gehashten Passwörtern verwaltet.
-            Zugriff auf deine Daten hast ausschließlich du – auch wir sehen
-            deine Listen nicht im Klartext.
+            {t(
+              "Die App läuft komplett über verschlüsseltes HTTPS. Konten werden über unseren Backend-Anbieter mit gehashten Passwörtern verwaltet. Zugriff auf deine Daten hast ausschließlich du – auch wir sehen deine Listen nicht im Klartext.",
+              "The app runs entirely over encrypted HTTPS. Accounts are managed by our backend provider with hashed passwords. Only you have access to your data — we can't see your lists in plaintext either.",
+            )}
           </p>
           <p>
-            Wenn du dich sicherer fühlen willst, wähle beim Anlegen des Kontos
-            ein starkes, einzigartiges Passwort und melde dich auf fremden
-            Geräten wieder ab.
+            {t(
+              "Wenn du dich sicherer fühlen willst, wähle beim Anlegen des Kontos ein starkes, einzigartiges Passwort und melde dich auf fremden Geräten wieder ab.",
+              "For extra safety, choose a strong, unique password when creating your account and sign out from devices that aren't yours.",
+            )}
           </p>
         </>
       ),
     },
     {
       id: "imprint",
-      label: "Impressum",
+      label: t("Impressum", "Imprint"),
       Icon: FileText,
       body: (
         <>
           <p>
-            Wochenend-Retter ist ein privates Hobby-Projekt, das dir den
-            deutschen Wochenendrhythmus erleichtert. Anbieter-Kennzeichnung
-            nach §5 TMG stellen wir gerne auf Anfrage bereit.
+            {t(
+              "Wochenend-Retter ist ein privates Hobby-Projekt, das dir den deutschen Wochenendrhythmus erleichtert. Anbieter-Kennzeichnung nach §5 TMG stellen wir gerne auf Anfrage bereit.",
+              "Wochenend-Retter is a personal hobby project that makes the German weekend rhythm easier. Provider information under §5 TMG is available on request.",
+            )}
           </p>
           <p>
-            Kontakt:{" "}
+            {t("Kontakt:", "Contact:")}{" "}
             <a className="underline" href="mailto:hallo@wochenend-retter.app">
               hallo@wochenend-retter.app
             </a>
@@ -240,7 +243,7 @@ function PrivacySecurityCard() {
   return (
     <section className="px-5 mb-10">
       <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Shield className="size-3.5" /> Datenschutz &amp; Sicherheit
+        <Shield className="size-3.5" /> {t("Datenschutz & Sicherheit", "Privacy & Security")}
       </h3>
       <div className="bg-white rounded-2xl ring-1 ring-black/5 overflow-hidden divide-y divide-zinc-100 shadow-sm">
         {items.map(({ id, label, Icon, body }) => {
@@ -270,13 +273,17 @@ function PrivacySecurityCard() {
         })}
       </div>
       <p className="text-[10px] text-zinc-400 mt-2 px-1">
-        Diese Inhalte werden nur eingeblendet, wenn du sie öffnest.
+        {t(
+          "Diese Inhalte werden nur eingeblendet, wenn du sie öffnest.",
+          "These sections are only shown when you open them.",
+        )}
       </p>
     </section>
   );
 }
 
 function FeedbackCard() {
+  const { t } = useI18n();
   const feedbackEmail = "wochenendretter@gmail.com";
   const subject = encodeURIComponent("Wochenend-Retter · Feedback");
   const body = encodeURIComponent(
@@ -288,23 +295,27 @@ function FeedbackCard() {
         <MessageCircleHeart className="size-3.5" /> Feedback
       </h3>
       <div className="bg-white rounded-2xl ring-1 ring-black/5 p-5 shadow-sm">
-        <div className="text-sm font-semibold mb-1">Gefällt dir die App?</div>
+        <div className="text-sm font-semibold mb-1">
+          {t("Gefällt dir die App?", "Do you like the app?")}
+        </div>
         <p className="text-xs text-zinc-500 mb-4">
-          Sag uns, was gut läuft — oder was noch fehlt. Jede Rückmeldung hilft,
-          Wochenend-Retter besser zu machen.
+          {t(
+            "Sag uns, was gut läuft — oder was noch fehlt. Jede Rückmeldung hilft, Wochenend-Retter besser zu machen.",
+            "Tell us what's working — or what's missing. Every note helps make Wochenend-Retter better.",
+          )}
         </p>
         <div className="flex gap-2">
           <a
             href={`mailto:${feedbackEmail}?subject=${subject}&body=${body}`}
             className="flex-1 text-center bg-ink text-canvas rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider"
           >
-            Feedback senden
+            {t("Feedback senden", "Send feedback")}
           </a>
           <a
             href={`mailto:${feedbackEmail}?subject=${encodeURIComponent("Wochenend-Retter · Idee")}`}
             className="flex-1 text-center bg-accent-yellow text-ink rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider"
           >
-            Idee vorschlagen
+            {t("Idee vorschlagen", "Suggest an idea")}
           </a>
         </div>
       </div>
@@ -313,6 +324,7 @@ function FeedbackCard() {
 }
 
 function ShareAppCard() {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const share = async () => {
     const url = "https://wochenend-retter.lovable.app";
@@ -340,23 +352,27 @@ function ShareAppCard() {
   return (
     <section className="px-5 mb-10">
       <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Share2 className="size-3.5" /> App teilen
+        <Share2 className="size-3.5" /> {t("App teilen", "Share app")}
       </h3>
       <div className="bg-white rounded-2xl ring-1 ring-black/5 p-5 shadow-sm">
-        <div className="text-sm font-semibold mb-1">Freunde einladen</div>
+        <div className="text-sm font-semibold mb-1">
+          {t("Freunde einladen", "Invite friends")}
+        </div>
         <p className="text-xs text-zinc-500 mb-4">
-          Teile Wochenend-Retter mit Familie und Freunden — damit niemand mehr
-          Samstag um kurz vor acht verzweifelt zum Späti rennt.
+          {t(
+            "Teile Wochenend-Retter mit Familie und Freunden — damit niemand mehr Samstag um kurz vor acht verzweifelt zum Späti rennt.",
+            "Share Wochenend-Retter with family and friends — so nobody has to sprint to a corner shop at 7:59pm on Saturday.",
+          )}
         </p>
         <button
           onClick={share}
           className="w-full bg-ink text-canvas rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2"
         >
-          <Share2 className="size-3.5" /> Diese App teilen
+          <Share2 className="size-3.5" /> {t("Diese App teilen", "Share this app")}
         </button>
         {copied && (
           <div className="mt-3 text-center text-xs font-medium text-green-700 bg-green-50 rounded-lg py-2 ring-1 ring-green-200">
-            Link in die Zwischenablage kopiert
+            {t("Link in die Zwischenablage kopiert", "Link copied to clipboard")}
           </div>
         )}
       </div>
@@ -365,10 +381,11 @@ function ShareAppCard() {
 }
 
 function SignedOut() {
+  const { t } = useI18n();
   const benefits = [
-    "Unbegrenzt viele Einkaufslisten anlegen",
-    "Gelöschte Listen 30 Tage lang wiederherstellen",
-    "Lieblings-Läden speichern und geräteübergreifend abrufen",
+    t("Unbegrenzt viele Einkaufslisten anlegen", "Create unlimited shopping lists"),
+    t("Gelöschte Listen 30 Tage lang wiederherstellen", "Restore deleted lists for 30 days"),
+    t("Lieblings-Läden speichern und geräteübergreifend abrufen", "Save favourite shops and use them across devices"),
   ];
   return (
     <>
@@ -379,9 +396,14 @@ function SignedOut() {
               <UserCircle2 className="size-5" />
             </div>
             <div>
-              <div className="text-sm font-semibold">Noch kein Konto</div>
+              <div className="text-sm font-semibold">
+                {t("Noch kein Konto", "No account yet")}
+              </div>
               <div className="text-xs text-zinc-500">
-                Ohne Anmeldung nutzbar — mit Konto komfortabler.
+                {t(
+                  "Ohne Anmeldung nutzbar — mit Konto komfortabler.",
+                  "Usable without an account — nicer with one.",
+                )}
               </div>
             </div>
           </div>
@@ -397,13 +419,13 @@ function SignedOut() {
             to="/auth"
             className="block text-center bg-ink text-canvas rounded-xl py-3 text-sm font-semibold"
           >
-            Konto erstellen
+            {t("Konto erstellen", "Create account")}
           </Link>
           <Link
             to="/auth"
             className="block text-center text-xs text-zinc-500 mt-3 underline"
           >
-            Ich habe schon ein Konto
+            {t("Ich habe schon ein Konto", "I already have an account")}
           </Link>
         </div>
       </section>
@@ -413,6 +435,7 @@ function SignedOut() {
 
 function SignedIn({ email }: { email: string }) {
   const qc = useQueryClient();
+  const { t, lang } = useI18n();
   const [_lists, setLists] = useLocalStorage<ShoppingList[]>(
     "sonntag.lists",
     [],
@@ -441,13 +464,13 @@ function SignedIn({ email }: { email: string }) {
     });
     await removeFn({ data: { id } });
     qc.invalidateQueries({ queryKey: ["deleted-lists"] });
-    flashToast("Liste wiederhergestellt");
+    flashToast(t("Liste wiederhergestellt", "List restored"));
   };
 
   const forget = async (id: string) => {
     await removeFn({ data: { id } });
     qc.invalidateQueries({ queryKey: ["deleted-lists"] });
-    flashToast("Endgültig gelöscht");
+    flashToast(t("Endgültig gelöscht", "Permanently deleted"));
   };
 
   const signOut = async () => {
@@ -467,35 +490,38 @@ function SignedIn({ email }: { email: string }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold truncate">{email}</div>
-            <div className="text-xs text-zinc-500">Angemeldet</div>
+            <div className="text-xs text-zinc-500">{t("Angemeldet", "Signed in")}</div>
           </div>
           <button
             onClick={signOut}
             className="text-xs font-semibold uppercase tracking-wider px-3 py-2 rounded-lg bg-zinc-50 ring-1 ring-black/5 flex items-center gap-1"
           >
-            <LogOut className="size-3.5" /> Abmelden
+            <LogOut className="size-3.5" /> {t("Abmelden", "Sign out")}
           </button>
         </div>
       </section>
 
       <section className="px-5 mb-10">
         <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-          <Sparkles className="size-3.5" /> Gelöschte Listen · 30 Tage
+          <Sparkles className="size-3.5" /> {t("Gelöschte Listen · 30 Tage", "Deleted lists · 30 days")}
         </h3>
 
         {deleted.isLoading && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-sm text-zinc-500">
-            Lade …
+            {t("Lade …", "Loading …")}
           </div>
         )}
         {deleted.isError && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-sm text-red-600">
-            Konnte nicht laden.
+            {t("Konnte nicht laden.", "Could not load.")}
           </div>
         )}
         {deleted.data && deleted.data.length === 0 && (
           <div className="bg-white rounded-2xl ring-1 ring-black/5 p-6 text-sm text-zinc-500 text-center">
-            Keine gelöschten Listen. Was du löschst, erscheint hier für 30 Tage.
+            {t(
+              "Keine gelöschten Listen. Was du löschst, erscheint hier für 30 Tage.",
+              "No deleted lists. Anything you delete appears here for 30 days.",
+            )}
           </div>
         )}
         {deleted.data && deleted.data.length > 0 && (
@@ -516,8 +542,9 @@ function SignedIn({ email }: { email: string }) {
                         )}
                       </div>
                       <div className="text-xs text-zinc-500">
-                        {snap.items.length} Einträge · gelöscht{" "}
-                        {when.toLocaleDateString("de-DE")}
+                        {snap.items.length} {t("Einträge", "items")} ·{" "}
+                        {t("gelöscht", "deleted")}{" "}
+                        {when.toLocaleDateString(lang === "en" ? "en-GB" : "de-DE")}
                       </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
@@ -525,13 +552,13 @@ function SignedIn({ email }: { email: string }) {
                         onClick={() => restore(row.id, snap)}
                         className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-accent-yellow text-ink flex items-center gap-1"
                       >
-                        <RotateCcw className="size-3" /> Zurück
+                        <RotateCcw className="size-3" /> {t("Zurück", "Restore")}
                       </button>
                       <button
                         onClick={() => forget(row.id)}
                         className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-zinc-100 text-zinc-500 flex items-center gap-1"
                       >
-                        <Trash2 className="size-3" /> Weg
+                        <Trash2 className="size-3" /> {t("Weg", "Remove")}
                       </button>
                     </div>
                   </div>
