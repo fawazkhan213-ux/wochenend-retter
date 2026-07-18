@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Trash2, Share2, ListPlus, Check, Sparkles, Lock } from "lucide-react";
@@ -72,6 +72,23 @@ function ShoppingPage() {
   const [newListName, setNewListName] = useState("");
   const [newListTag, setNewListTag] = useState("");
   const [showNewForm, setShowNewForm] = useState(false);
+  const newFormRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-close the "Neue Liste" form when the user clicks outside it
+  // without having typed anything — keeps the UI clean if they change their mind.
+  useEffect(() => {
+    if (!showNewForm) return;
+    const onDown = (e: MouseEvent) => {
+      const el = newFormRef.current;
+      if (!el) return;
+      if (el.contains(e.target as Node)) return;
+      if (!newListName.trim() && !newListTag.trim()) {
+        setShowNewForm(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [showNewForm, newListName, newListTag]);
   const [shareToast, setShareToast] = useState<string | null>(null);
   const [confettiTrigger, setConfettiTrigger] = useState<number | null>(null);
   const [celebratedListId, setCelebratedListId] = useState<string | null>(null);
@@ -343,13 +360,14 @@ function ShoppingPage() {
         </div>
 
         {showNewForm && (
+          <div ref={newFormRef}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
               if (!newListName.trim()) return;
               createList(newListName, newListTag);
             }}
-            className="mt-3 bg-white rounded-2xl ring-1 ring-black/5 p-3 flex gap-2 shadow-sm"
+            className="mt-3 bg-white rounded-2xl ring-1 ring-black/5 p-3 flex gap-2 shadow-sm animate-fade-in"
           >
             <input
               value={newListName}
@@ -372,6 +390,7 @@ function ShoppingPage() {
               <Check className="size-4" />
             </button>
           </form>
+          </div>
         )}
       </section>
 
