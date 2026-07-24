@@ -15,6 +15,24 @@ const config = {
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY as string;
 
 const SUB_ID_KEY = "sonntag.push.subscription_id";
+const DEVICE_SECRET_KEY = "sonntag.push.device_secret";
+
+function getOrCreateDeviceSecret(): string {
+  if (typeof window === "undefined") return "";
+  let s = window.localStorage.getItem(DEVICE_SECRET_KEY);
+  if (!s) {
+    const buf = new Uint8Array(32);
+    crypto.getRandomValues(buf);
+    s = Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("");
+    window.localStorage.setItem(DEVICE_SECRET_KEY, s);
+  }
+  return s;
+}
+
+function getDeviceSecret(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(DEVICE_SECRET_KEY);
+}
 
 let app: FirebaseApp | null = null;
 let messaging: Messaging | null = null;
@@ -52,18 +70,33 @@ export async function registerPush(): Promise<
   const { data: sess } = await supabase.auth.getSession();
   const userId = sess.session?.user.id ?? null;
 
-  const { data, error } = await supabase
-    .from("push_subscriptions")
-    .upsert(
-      { device_token: token, timezone, user_agent: userAgent, user_id: userId },
-      { onConflict: "device_token" },
-    )
-    .select("id")
-    .single();
-
-  if (error || !data) return { ok: false, reason: error?.message ?? "db" };
-  window.localStorage.setItem(SUB_ID_KEY, data.id);
-  return { ok: true, token, subscriptionId: data.id };
+  let subscriptionId: string;
+  if (userId) {
+    // Authenticated flow: direct table access, RLS enforces owner scope.
+    const { data, error } = await supabase
+      .from("push_subscriptions")
+      .upsert(
+        { device_token: token, timezone, user_agent: userAgent, user_id: userId },
+        { onConflict: "device_token" },
+      )
+      .select("id")
+      .single();
+    if (error || !data) return { ok: false, reason: error?.message ?? "db" };
+    subscriptionId = data.id;
+  } else {
+    // Guest flow: server-side RPC verifies a per-device secret.
+    const secret = getOrCreateDeviceSecret();
+    const { data, error } = await supabase.rpc("guest_register_push", {
+      _device_token: token,
+      _timezone: timezone,
+      _user_agent: userAgent,
+      _device_secret: secret,
+    });
+    if (error || !data) return { ok: false, reason: error?.message ?? "db" };
+    subscriptionId = data as string;
+  }
+  window.localStorage.setItem(SUB_ID_KEY, subscriptionId);
+  return { ok: true, token, subscriptionId };
 }
 
 export function getStoredSubscriptionId(): string | null {
@@ -90,11 +123,29 @@ const DEFAULTS: Record<Exclude<ReminderType, "custom">, { hour: number; minute: 
 };
 
 export async function loadPrefs(subscriptionId: string): Promise<ReminderPref[]> {
-  const { data } = await supabase
-    .from("reminder_prefs")
-    .select("id, type, enabled, hour_local, minute_local, weekday, list_id")
-    .eq("subscription_id", subscriptionId);
-  return (data as ReminderPref[] | null) ?? [];
+  const { data: sess } = await supabase.auth.getSession();
+  if (sess.session?.user) {
+    const { data } = await supabase
+      .from("reminder_prefs")
+      .select("id, type, enabled, hour_local, minute_local, weekday, list_id")
+      .eq("subscription_id", subscriptionId);
+    return (data as ReminderPref[] | null) ?? [];
+  }
+  const secret = getDeviceSecret();
+  if (!secret) return [];
+  const { data } = await supabase.rpc("guest_list_prefs", {
+    _subscription_id: subscriptionId,
+    _device_secret: secret,
+  });
+  return ((data as ReminderPref[] | null) ?? []).map((r) => ({
+    id: r.id,
+    type: r.type,
+    enabled: r.enabled,
+    hour_local: r.hour_local,
+    minute_local: r.minute_local,
+    weekday: r.weekday,
+    list_id: r.list_id,
+  }));
 }
 
 export async function togglePref(
@@ -104,6 +155,22 @@ export async function togglePref(
   hour?: number,
   minute?: number,
 ): Promise<void> {
+  const h = hour ?? DEFAULTS[type].hour;
+  const m = minute ?? DEFAULTS[type].minute;
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.user) {
+    const secret = getDeviceSecret();
+    if (!secret) return;
+    await supabase.rpc("guest_upsert_standard_pref", {
+      _subscription_id: subscriptionId,
+      _device_secret: secret,
+      _type: type,
+      _enabled: enabled,
+      _hour: h,
+      _minute: m,
+    });
+    return;
+  }
   const existing = await supabase
     .from("reminder_prefs")
     .select("id")
@@ -111,9 +178,6 @@ export async function togglePref(
     .eq("type", type)
     .is("list_id", null)
     .maybeSingle();
-
-  const h = hour ?? DEFAULTS[type].hour;
-  const m = minute ?? DEFAULTS[type].minute;
 
   if (existing.data?.id) {
     await supabase
@@ -134,6 +198,20 @@ export async function upsertCustom(
   hour: number,
   minute: number,
 ): Promise<void> {
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.user) {
+    const secret = getDeviceSecret();
+    if (!secret) return;
+    await supabase.rpc("guest_upsert_custom_pref", {
+      _subscription_id: subscriptionId,
+      _device_secret: secret,
+      _list_id: listId,
+      _weekday: weekday,
+      _hour: hour,
+      _minute: minute,
+    });
+    return;
+  }
   const existing = await supabase
     .from("reminder_prefs")
     .select("id")
@@ -161,5 +239,17 @@ export async function upsertCustom(
 }
 
 export async function deleteCustom(prefId: string): Promise<void> {
+  const { data: sess } = await supabase.auth.getSession();
+  if (!sess.session?.user) {
+    const secret = getDeviceSecret();
+    const subId = getStoredSubscriptionId();
+    if (!secret || !subId) return;
+    await supabase.rpc("guest_delete_pref", {
+      _subscription_id: subId,
+      _device_secret: secret,
+      _pref_id: prefId,
+    });
+    return;
+  }
   await supabase.from("reminder_prefs").delete().eq("id", prefId);
 }
