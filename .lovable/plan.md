@@ -1,83 +1,66 @@
+# v1.1 — Benachrichtigungen (Web Push)
 
-# How to publish your project as an "app"
+Ziel: Wenn Nutzer:innen die App auf dem Home-Bildschirm gespeichert haben, bekommen sie zeitgesteuerte Erinnerungen — auch wenn die App geschlossen ist. Funktioniert auf Android/Desktop sofort, auf iPhone/iPad ab iOS 16.4 nach dem "Zum Home-Bildschirm hinzufügen"-Schritt (den wir schon prompten).
 
-Your project is a **web app** built with React. When you press Publish in Lovable, it always gives you a URL — that's how the web works. To make it *feel* or *behave* like an app, you have three options. Here's what each one is, what it costs, and how much work it is.
+Kein Account nötig — Erinnerungen funktionieren pro Gerät.
 
----
+## Reminder-Typen (v1.1)
 
-## Option 1 — Installable web app (PWA)
+1. **Freitagabend-Nudge** — Fr 18:00: "Liste für morgen fertig?"
+2. **Samstag Ladenschluss-Warnung** — Sa, konfigurierbar (Default 15:00): "Noch X Stunden bis Ladenschluss"
+3. **Sonntag Plan-Vorschlag** — So 10:00: "Sonntag offen: Orte in deiner Nähe"
+4. **Eigene Zeit für Einkauf-Erinnerung** — im Einkauf-Tab: "Erinnere mich am [Wochentag] um [Uhrzeit]"
 
-**What it is:** Same web app, but users tap "Add to Home Screen" on their phone. It gets an icon, opens fullscreen (no browser bar), and looks/feels native. This is what Twitter, Starbucks, and Uber use on mobile web.
+Alle vier sind einzeln an/aus-schaltbar.
 
-**Pros**
-- Free. No app store. No review.
-- One codebase, works on iPhone, Android, desktop.
-- Updates instantly when you republish — no waiting.
-- Ready in ~5 minutes of work in Lovable.
+## User-Flow
 
-**Cons**
-- Users have to know to tap "Add to Home Screen" (iPhone hides this in the Share menu).
-- No listing in the App Store / Play Store.
-- Limited access to some native features (deep hardware, background push on iOS is limited).
+1. Neuer Bereich **"Benachrichtigungen"** in der Konto-Seite mit einer Karte pro Reminder-Typ.
+2. Beim ersten Aktivieren: kurzer erklärender Screen ("Wir schicken dir max. 3 Erinnerungen die Woche. Du kannst jederzeit abbestellen.") → dann Browser-Permission-Prompt.
+3. Nach Zustimmung: Service Worker registriert, FCM-Token geholt, im Backend gespeichert mit Timezone + Reminder-Präferenzen.
+4. Extra Einstiegspunkt in **Einkauf-Tab**: "🔔 An diese Liste erinnern lassen" mit Wochentag+Uhrzeit-Picker → speichert einen custom Reminder.
+5. In Konto: alle aktiven Reminders einsehbar, einzeln deaktivierbar.
 
-**Steps**
-1. Ask me to "make it installable as a PWA." I add a manifest + icons.
-2. Click Publish in Lovable (top-right web icon).
-3. (Optional) Connect a custom domain in Project Settings → Domains.
-4. On your phone, open the URL → Share → "Add to Home Screen."
+## Reihenfolge der Umsetzung
 
----
+**Phase A — Infrastruktur (kein UI):**
+- Firebase Cloud Messaging Projekt einrichten. Der User muss dazu ein Firebase-Projekt anlegen und uns 4 Werte geben (Web-App-Config: apiKey, projectId, messagingSenderId, appId — alle publishable, gehen ins Frontend) + einen VAPID Public Key + einen Server-Key/Service-Account für den Server. Ich erkläre das Schritt-für-Schritt, wenn wir soweit sind.
+- `public/firebase-messaging-sw.js` als Push-Service-Worker (separat vom PWA-App-Shell, so wie in der Lovable-Doku vorgesehen).
+- Backend-Tabelle `push_subscriptions`: `id`, `user_id` (nullable für Gäste), `device_token` (unique), `timezone`, `endpoint`, `created_at`. RLS + GRANTs wie üblich.
+- Backend-Tabelle `reminder_prefs`: `id`, `subscription_id`, `type` (`friday_nudge` / `saturday_warning` / `sunday_plan` / `custom`), `enabled`, `hour_local`, `minute_local`, `weekday` (0–6, nur für custom), `list_id` (optional, für "erinnere mich an DIESE Liste").
+- Server-Funktion `registerPushSubscription`: nimmt FCM-Token + Timezone entgegen, upsert in DB. Gäste bekommen anon `user_id = null`, funktioniert per Device-Token.
+- Server-Funktion `updateReminderPref`: an/aus + Zeit setzen.
 
-## Option 2 — Real native app in the App Store / Play Store (Capacitor)
+**Phase B — Sender:**
+- Server-Route `/api/public/hooks/send-reminders` (Signatur-verifiziert via `apikey`-Header, siehe schedule-jobs-modern). Iteriert reminder_prefs, filtert nach passender lokaler Uhrzeit (jetzt in der Timezone der Subscription), schickt FCM-Push mit vorgefertigtem Titel/Body/Deeplink pro Typ.
+- **pg_cron**: läuft alle 15 Minuten (`*/15 * * * *`), ruft die Route. So decken wir alle Zeitzonen und alle Viertelstunden-Slots ab, ohne zu spammen.
+- Deduplication: `sent_at` pro (subscription, type, date) gespeichert, damit derselbe User denselben Reminder nicht mehrfach am selben Tag bekommt.
 
-**What it is:** We wrap your web app in a native shell (Capacitor) and submit it to Apple and Google as a real installable app.
+**Phase C — Frontend UI:**
+- Neue Datei `src/lib/pushNotifications.ts`: `initFirebase()`, `requestPermission()`, `getToken()`, `saveSubscription()`.
+- Neue Karte in `src/routes/account.tsx`: "Benachrichtigungen" mit Toggle pro Reminder-Typ + Uhrzeit-Picker für Samstag-Warnung.
+- Erweiterung `src/routes/shopping.tsx`: neuer "🔔 Erinnerung setzen"-Button pro Liste öffnet ein kleines Sheet mit Wochentag+Uhrzeit.
+- i18n-Einträge für alle neuen Strings (DE + EN).
+- iOS-Hinweis: wenn `!isStandalone && iOS`, zeigen wir vor dem Permission-Prompt einen Extra-Screen "Für Benachrichtigungen musst du die App zuerst zum Home-Bildschirm hinzufügen" mit Link zum bestehenden InstallPrompt.
 
-**Pros**
-- Real App Store / Play Store listing.
-- Full access to native features (push, camera, biometrics, background).
-- Feels 100% native.
+## Technische Details (dev-relevant)
 
-**Cons — this is a real project, not a click:**
-- **Apple Developer account: $99/year.** Google Play: $25 one-time.
-- **You need a Mac with Xcode** to build and submit the iOS app. There is no way around this — Apple requires it.
-- Store review takes **1–7 days**, and Apple may reject and ask for changes.
-- Every update goes through review again.
-- Export code from Lovable to GitHub → clone locally → run Capacitor build commands.
+- FCM statt Web Push direkt: FCM handhabt VAPID, iOS-Zustellung und Token-Refresh sauber. Alternative wäre eine eigene `web-push`-Node-Implementierung, aber die läuft nicht sauber im Cloudflare Worker Runtime — FCM ist HTTP-only und Worker-kompatibel.
+- Der Messaging-Service-Worker (`firebase-messaging-sw.js`) ist explizit von der Lovable-PWA-Regel ausgenommen — er läuft in Preview und Production, kein Konflikt mit unserer manifest-only PWA-Strategie.
+- FCM Config-Werte (apiKey, projectId, appId, messagingSenderId, VAPID public key) sind **publishable** → gehen als `VITE_FIREBASE_*` env vars ins Frontend.
+- FCM Server-Credentials (Service Account JSON) → als Secret gespeichert, nur im Server benutzt.
+- `push_subscriptions` erlaubt `user_id NULL` → Gast-Devices werden nur via Token identifiziert. Bei späterem Login mergen wir das Token auf die User-ID.
 
-**Steps (high level)**
-1. In Lovable: click the **+** menu → **GitHub** → connect and push your project.
-2. On your Mac: clone the repo, run `npm install`, add Capacitor (`npx cap add ios` / `npx cap add android`).
-3. Buy Apple Developer + Google Play accounts.
-4. Open in Xcode (iOS) / Android Studio, set app name, icon, bundle ID.
-5. Build, upload to App Store Connect / Play Console, fill listing (screenshots, description, privacy policy).
-6. Submit for review, wait, publish.
+## Was ich vor dem Build brauche
 
-Realistically: **1–2 weekends of work** for a first-time submission, plus ongoing account fees.
+1. Bestätigung: **iOS-User müssen die App zum Home-Bildschirm hinzufügen, damit Benachrichtigungen dort funktionieren** — wir zeigen das transparent an, aber die Einschränkung selbst können wir nicht umgehen.
+2. Ein neues **Firebase-Projekt** (kostenlos, ich schicke dir 3 Screenshots-Level-Anleitung, wenn wir soweit sind). Du gibst mir dann die 5 publishable Config-Werte + 1 Service-Account-JSON.
+3. Wenn du willst, kann ich die Beispieltexte für alle 4 Reminder-Typen zusammen mit dir festlegen bevor wir bauen — sie sind kurz, aber prägend für den Ton.
 
----
+## Was nicht in v1.1 kommt (aber später gut passen würde)
 
-## Option 3 — Custom domain only (stay a web app)
+- Rich-Push mit Bild (z.B. Wetter-Icon)
+- Ort-basierte Trigger ("Du bist in der Nähe eines Ladens, der bald schließt")
+- Wöchentliche Zusammenfassung ("Deine Woche im Überblick")
 
-**What it is:** Keep it as a website but publish it under your own domain like `sonntagsplan.de` instead of `something.lovable.app`. No install, just a nicer URL.
-
-**Pros**
-- ~10 minutes of work.
-- Looks professional.
-- Can be combined with Option 1 (PWA on your own domain — best of both).
-
-**Cons**
-- Not an "app" — still opens in a browser tab unless combined with PWA.
-- Domain costs ~$10–15/year.
-
-**Steps**
-1. Click Publish in Lovable.
-2. Project Settings → Project → Domains → **Buy new domain** (or connect one you already own).
-3. Follow the DNS setup (Lovable walks you through it).
-
----
-
-## My honest recommendation for a first project
-
-Start with **Option 1 (PWA)** — optionally on your own domain (Option 3). You'll have a real "app on your phone" today, for free, no Mac, no review. If people actually use it and you outgrow PWA, *then* invest the time and money in Option 2 to get on the App Store.
-
-**Tell me which option you want** (or "PWA + custom domain") and I'll set it up.
+Diese sparen wir uns für v1.2, wenn v1.1 sich in der Praxis bewährt.
