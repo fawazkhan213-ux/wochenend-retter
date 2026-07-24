@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
+import { NotificationsCard } from "@/components/NotificationsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import { useLocalStorage } from "@/lib/useLocalStorage";
@@ -78,6 +79,7 @@ function AccountPage() {
       <FeedbackCard />
       <ShareAppCard />
       <LanguageCard />
+      <NotificationsCard />
       <PrivacySecurityCard />
 
       <BottomNav />
