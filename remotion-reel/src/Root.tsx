@@ -1,6 +1,7 @@
 import { Composition } from "remotion";
 import { MainVideo, DURATION } from "./MainVideo";
 import { PlanVideo, PLAN_DURATION } from "./PlanVideo";
+import { NotifyVideo, NOTIFY_DURATION } from "./NotifyVideo";
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -16,6 +17,14 @@ export const RemotionRoot: React.FC = () => (
     id="plan"
     component={PlanVideo}
     durationInFrames={PLAN_DURATION}
+    fps={30}
+    width={1080}
+    height={1920}
+  />
+  <Composition
+    id="notify"
+    component={NotifyVideo}
+    durationInFrames={NOTIFY_DURATION}
     fps={30}
     width={1080}
     height={1920}
