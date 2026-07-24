@@ -56,6 +56,7 @@ export type Database = {
       push_subscriptions: {
         Row: {
           created_at: string
+          device_secret: string | null
           device_token: string
           id: string
           timezone: string
@@ -65,6 +66,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          device_secret?: string | null
           device_token: string
           id?: string
           timezone?: string
@@ -74,6 +76,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          device_secret?: string | null
           device_token?: string
           id?: string
           timezone?: string
@@ -138,7 +141,71 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      guest_delete_pref: {
+        Args: {
+          _device_secret: string
+          _pref_id: string
+          _subscription_id: string
+        }
+        Returns: undefined
+      }
+      guest_list_prefs: {
+        Args: { _device_secret: string; _subscription_id: string }
+        Returns: {
+          created_at: string
+          enabled: boolean
+          hour_local: number
+          id: string
+          last_sent_date: string | null
+          list_id: string | null
+          minute_local: number
+          subscription_id: string
+          type: Database["public"]["Enums"]["reminder_type"]
+          updated_at: string
+          weekday: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "reminder_prefs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      guest_register_push: {
+        Args: {
+          _device_secret: string
+          _device_token: string
+          _timezone: string
+          _user_agent: string
+        }
+        Returns: string
+      }
+      guest_upsert_custom_pref: {
+        Args: {
+          _device_secret: string
+          _hour: number
+          _list_id: string
+          _minute: number
+          _subscription_id: string
+          _weekday: number
+        }
+        Returns: string
+      }
+      guest_upsert_standard_pref: {
+        Args: {
+          _device_secret: string
+          _enabled: boolean
+          _hour: number
+          _minute: number
+          _subscription_id: string
+          _type: Database["public"]["Enums"]["reminder_type"]
+        }
+        Returns: string
+      }
+      guest_verify: {
+        Args: { _device_secret: string; _subscription_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       reminder_type:
