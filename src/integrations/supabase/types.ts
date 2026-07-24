@@ -53,6 +53,86 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          device_token: string
+          id: string
+          timezone: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_token: string
+          id?: string
+          timezone?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_token?: string
+          id?: string
+          timezone?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      reminder_prefs: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          hour_local: number
+          id: string
+          last_sent_date: string | null
+          list_id: string | null
+          minute_local: number
+          subscription_id: string
+          type: Database["public"]["Enums"]["reminder_type"]
+          updated_at: string
+          weekday: number | null
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          hour_local?: number
+          id?: string
+          last_sent_date?: string | null
+          list_id?: string | null
+          minute_local?: number
+          subscription_id: string
+          type: Database["public"]["Enums"]["reminder_type"]
+          updated_at?: string
+          weekday?: number | null
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          hour_local?: number
+          id?: string
+          last_sent_date?: string | null
+          list_id?: string | null
+          minute_local?: number
+          subscription_id?: string
+          type?: Database["public"]["Enums"]["reminder_type"]
+          updated_at?: string
+          weekday?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_prefs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -61,7 +141,11 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      reminder_type:
+        | "friday_nudge"
+        | "saturday_warning"
+        | "sunday_plan"
+        | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -188,6 +272,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      reminder_type: [
+        "friday_nudge",
+        "saturday_warning",
+        "sunday_plan",
+        "custom",
+      ],
+    },
   },
 } as const
