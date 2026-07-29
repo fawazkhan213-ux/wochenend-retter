@@ -1,5 +1,5 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
+import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
 import { COLORS, body, display } from "../theme";
 import { useIn } from "./_shared";
 
@@ -7,9 +7,11 @@ import { useIn } from "./_shared";
 // Bold two-panel Bauhaus divide. Message: der Tag, an dem nichts geht.
 export const Split: React.FC = () => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
   const wipe = useIn(0, 200);
   const lbl = useIn(20);
   const big = useIn(30, 20);
+  const stamp = useIn(24);
   const shake = frame < 40 ? Math.sin(frame * 1.4) * 2 : 0;
   return (
     <AbsoluteFill>
@@ -21,22 +23,25 @@ export const Split: React.FC = () => {
       }}>
         {/* Shutter slats */}
         <div style={{ position: "absolute", inset: 60, borderRadius: 24, overflow: "hidden", border: `4px solid ${COLORS.cream}` }}>
-          {Array.from({ length: 14 }).map((_, i) => (
+          {Array.from({ length: 14 }).map((_, i) => {
+            const slat = spring({ frame: frame - (6 + i * 2), fps, config: { damping: 200 } });
+            return (
             <div key={i} style={{
               position: "absolute", left: 0, right: 0, height: 44,
               top: i * 60 + 10,
               background: `#8b2418`,
               borderTop: `2px solid #6b1a11`,
               borderBottom: `2px solid #6b1a11`,
-              opacity: interpolate(useIn(6 + i * 2), [0, 1], [0, 1]),
+              opacity: slat,
             }} />
-          ))}
+            );
+          })}
           <div style={{
             position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%) rotate(-8deg)",
             padding: "18px 34px", background: COLORS.cream, color: COLORS.red,
             fontFamily: display, fontWeight: 700, fontSize: 56, letterSpacing: -1,
             boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
-            opacity: useIn(24),
+            opacity: stamp,
           }}>GESCHLOSSEN</div>
         </div>
       </div>
