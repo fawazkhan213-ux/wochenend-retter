@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Bell, BellOff, Check } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Bell, Check } from "lucide-react";
 
 import { useI18n } from "@/lib/i18n";
 import {
@@ -12,6 +12,13 @@ import {
 
 type FixedType = "friday_nudge" | "saturday_warning" | "sunday_plan";
 
+const AUTO_TRY_KEY = "sonntag.push.auto_enabled_tried";
+const DEFAULT_TIMES: Record<FixedType, { hour: number; minute: number }> = {
+  friday_nudge: { hour: 18, minute: 0 },
+  saturday_warning: { hour: 15, minute: 0 },
+  sunday_plan: { hour: 10, minute: 0 },
+};
+
 export function NotificationsCard() {
   const { t, lang } = useI18n();
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">(
@@ -21,14 +28,7 @@ export function NotificationsCard() {
   const [prefs, setPrefs] = useState<ReminderPref[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const id = getStoredSubscriptionId();
-    if (id) {
-      setSubId(id);
-      loadPrefs(id).then(setPrefs);
-    }
-  }, []);
+  const autoTried = useRef(false);
 
   const isStandalone =
     typeof window !== "undefined" &&
@@ -38,12 +38,48 @@ export function NotificationsCard() {
   const isIOS =
     typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
+  const enableDefaults = useCallback(async (id: string, existing: ReminderPref[]) => {
+    const missing = (Object.keys(DEFAULT_TIMES) as FixedType[]).filter(
+      (type) => !existing.some((p) => p.type === type && !p.list_id),
+    );
+    for (const type of missing) {
+      await togglePref(id, type, true, DEFAULT_TIMES[type].hour, DEFAULT_TIMES[type].minute);
+    }
+    return missing.length > 0;
+  }, []);
+
+  useEffect(() => {
+    const id = getStoredSubscriptionId();
+    if (id) {
+      setSubId(id);
+      loadPrefs(id).then(setPrefs);
+      return;
+    }
+    // Installed as a web app + permission already granted → turn reminders on
+    // automatically, once per device.
+    if (autoTried.current) return;
+    autoTried.current = true;
+    if (!isStandalone) return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (window.localStorage.getItem(AUTO_TRY_KEY)) return;
+    window.localStorage.setItem(AUTO_TRY_KEY, "1");
+    (async () => {
+      const res = await registerPush();
+      if (!res.ok) return;
+      setPermission("granted");
+      setSubId(res.subscriptionId);
+      const p = await loadPrefs(res.subscriptionId);
+      const added = await enableDefaults(res.subscriptionId, p);
+      setPrefs(added ? await loadPrefs(res.subscriptionId) : p);
+    })();
+  }, [isStandalone, enableDefaults]);
+
   async function enable() {
     setBusy(true);
     setError(null);
     const res = await registerPush();
-    setBusy(false);
     if (!res.ok) {
+      setBusy(false);
       setError(
         res.reason === "denied"
           ? t(
@@ -59,12 +95,38 @@ export function NotificationsCard() {
     setPermission("granted");
     setSubId(res.subscriptionId);
     const p = await loadPrefs(res.subscriptionId);
-    setPrefs(p);
+    const added = await enableDefaults(res.subscriptionId, p);
+    setPrefs(added ? await loadPrefs(res.subscriptionId) : p);
+    setBusy(false);
   }
 
+  // Optimistic: update local state first so the row doesn't flicker or
+  // re-layout while the request is in flight.
   async function onToggle(type: FixedType, enabled: boolean, hour?: number, minute?: number) {
     if (!subId) return;
-    await togglePref(subId, type, enabled, hour, minute);
+    const h = hour ?? DEFAULT_TIMES[type].hour;
+    const m = minute ?? DEFAULT_TIMES[type].minute;
+    setPrefs((prev) => {
+      const idx = prev.findIndex((p) => p.type === type && !p.list_id);
+      if (idx === -1) {
+        return [
+          ...prev,
+          {
+            id: `optimistic-${type}`,
+            type,
+            enabled,
+            hour_local: h,
+            minute_local: m,
+            weekday: null,
+            list_id: null,
+          },
+        ];
+      }
+      const next = [...prev];
+      next[idx] = { ...next[idx], enabled, hour_local: h, minute_local: m };
+      return next;
+    });
+    await togglePref(subId, type, enabled, h, m);
     setPrefs(await loadPrefs(subId));
   }
 
@@ -181,32 +243,33 @@ function ReminderRow({
   const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 
   return (
-    <div className="flex items-center gap-3 border-t border-zinc-100 pt-3 first:border-t-0 first:pt-0">
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-[11px] text-zinc-500">{subtitle}</div>
-        {showTime && enabled && (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-t border-zinc-100 pt-3 first:border-t-0 first:pt-0">
+      <div className="min-w-0">
+        <div className="text-sm font-medium break-words">{label}</div>
+        <div className="text-[11px] text-zinc-500 break-words">{subtitle}</div>
+        {showTime && (
           <input
             type="time"
             value={time}
+            disabled={!enabled}
             onChange={(e) => {
               const [h, m] = e.target.value.split(":").map(Number);
               onToggle(type, true, h, m);
             }}
-            className="mt-2 text-xs rounded-md ring-1 ring-black/10 px-2 py-1"
+            className="mt-2 w-[7.5rem] max-w-full text-xs rounded-md ring-1 ring-black/10 px-2 py-1 disabled:opacity-40"
           />
         )}
       </div>
       <button
         onClick={() => onToggle(type, !enabled, hour, minute)}
-        className={`h-6 w-11 rounded-full relative transition-colors ${enabled ? "bg-ink" : "bg-zinc-200"}`}
+        className={`h-6 w-11 shrink-0 rounded-full relative transition-colors ${enabled ? "bg-ink" : "bg-zinc-200"}`}
         aria-pressed={enabled}
+        aria-label={label}
       >
         <span
           className={`absolute top-0.5 size-5 bg-white rounded-full shadow transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}
         />
       </button>
-      {!enabled && <BellOff className="size-3.5 text-zinc-300" />}
     </div>
   );
 }

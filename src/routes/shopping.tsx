@@ -294,7 +294,7 @@ function ShoppingPage() {
             </p>
             <div className="flex gap-2">
               <Link
-                to="/auth"
+                to="/auth" search={{ next: "" }}
                 onClick={() => setShowGuestGate(false)}
                 className="flex-1 bg-ink text-canvas rounded-xl py-2.5 text-sm font-semibold text-center"
               >

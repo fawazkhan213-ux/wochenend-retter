@@ -418,13 +418,13 @@ function SignedOut() {
             ))}
           </ul>
           <Link
-            to="/auth"
+            to="/auth" search={{ next: "" }}
             className="block text-center bg-ink text-canvas rounded-xl py-3 text-sm font-semibold"
           >
             {t("Konto erstellen", "Create account")}
           </Link>
           <Link
-            to="/auth"
+            to="/auth" search={{ next: "" }}
             className="block text-center text-xs text-zinc-500 mt-3 underline"
           >
             {t("Ich habe schon ein Konto", "I already have an account")}
