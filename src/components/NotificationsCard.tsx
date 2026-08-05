@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Bell, BellOff, Check } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Bell, Check } from "lucide-react";
 
 import { useI18n } from "@/lib/i18n";
 import {
@@ -12,6 +12,13 @@ import {
 
 type FixedType = "friday_nudge" | "saturday_warning" | "sunday_plan";
 
+const AUTO_TRY_KEY = "sonntag.push.auto_enabled_tried";
+const DEFAULT_TIMES: Record<FixedType, { hour: number; minute: number }> = {
+  friday_nudge: { hour: 18, minute: 0 },
+  saturday_warning: { hour: 15, minute: 0 },
+  sunday_plan: { hour: 10, minute: 0 },
+};
+
 export function NotificationsCard() {
   const { t, lang } = useI18n();
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">(
@@ -21,14 +28,7 @@ export function NotificationsCard() {
   const [prefs, setPrefs] = useState<ReminderPref[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const id = getStoredSubscriptionId();
-    if (id) {
-      setSubId(id);
-      loadPrefs(id).then(setPrefs);
-    }
-  }, []);
+  const autoTried = useRef(false);
 
   const isStandalone =
     typeof window !== "undefined" &&
@@ -38,12 +38,48 @@ export function NotificationsCard() {
   const isIOS =
     typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
+  const enableDefaults = useCallback(async (id: string, existing: ReminderPref[]) => {
+    const missing = (Object.keys(DEFAULT_TIMES) as FixedType[]).filter(
+      (type) => !existing.some((p) => p.type === type && !p.list_id),
+    );
+    for (const type of missing) {
+      await togglePref(id, type, true, DEFAULT_TIMES[type].hour, DEFAULT_TIMES[type].minute);
+    }
+    return missing.length > 0;
+  }, []);
+
+  useEffect(() => {
+    const id = getStoredSubscriptionId();
+    if (id) {
+      setSubId(id);
+      loadPrefs(id).then(setPrefs);
+      return;
+    }
+    // Installed as a web app + permission already granted → turn reminders on
+    // automatically, once per device.
+    if (autoTried.current) return;
+    autoTried.current = true;
+    if (!isStandalone) return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (window.localStorage.getItem(AUTO_TRY_KEY)) return;
+    window.localStorage.setItem(AUTO_TRY_KEY, "1");
+    (async () => {
+      const res = await registerPush();
+      if (!res.ok) return;
+      setPermission("granted");
+      setSubId(res.subscriptionId);
+      const p = await loadPrefs(res.subscriptionId);
+      const added = await enableDefaults(res.subscriptionId, p);
+      setPrefs(added ? await loadPrefs(res.subscriptionId) : p);
+    })();
+  }, [isStandalone, enableDefaults]);
+
   async function enable() {
     setBusy(true);
     setError(null);
     const res = await registerPush();
-    setBusy(false);
     if (!res.ok) {
+      setBusy(false);
       setError(
         res.reason === "denied"
           ? t(
@@ -59,12 +95,38 @@ export function NotificationsCard() {
     setPermission("granted");
     setSubId(res.subscriptionId);
     const p = await loadPrefs(res.subscriptionId);
-    setPrefs(p);
+    const added = await enableDefaults(res.subscriptionId, p);
+    setPrefs(added ? await loadPrefs(res.subscriptionId) : p);
+    setBusy(false);
   }
 
+  // Optimistic: update local state first so the row doesn't flicker or
+  // re-layout while the request is in flight.
   async function onToggle(type: FixedType, enabled: boolean, hour?: number, minute?: number) {
     if (!subId) return;
-    await togglePref(subId, type, enabled, hour, minute);
+    const h = hour ?? DEFAULT_TIMES[type].hour;
+    const m = minute ?? DEFAULT_TIMES[type].minute;
+    setPrefs((prev) => {
+      const idx = prev.findIndex((p) => p.type === type && !p.list_id);
+      if (idx === -1) {
+        return [
+          ...prev,
+          {
+            id: `optimistic-${type}`,
+            type,
+            enabled,
+            hour_local: h,
+            minute_local: m,
+            weekday: null,
+            list_id: null,
+          },
+        ];
+      }
+      const next = [...prev];
+      next[idx] = { ...next[idx], enabled, hour_local: h, minute_local: m };
+      return next;
+    });
+    await togglePref(subId, type, enabled, h, m);
     setPrefs(await loadPrefs(subId));
   }
 
