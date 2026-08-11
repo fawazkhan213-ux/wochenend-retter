@@ -243,16 +243,16 @@ function ReminderRow({
   const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 
   return (
-    <div className="w-full max-w-full border-t border-zinc-100 pt-3 first:border-t-0 first:pt-0">
-      <div className="flex w-full max-w-full items-start gap-3">
-        <div className="min-w-0 flex-1">
+    <div className="w-full max-w-full overflow-hidden border-t border-zinc-100 pt-3 first:border-t-0 first:pt-0">
+      <div className="grid w-full max-w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
           <div className="text-sm font-medium break-words">{label}</div>
           <div className="text-[11px] text-zinc-500 break-words">{subtitle}</div>
         </div>
         <button
           type="button"
           onClick={() => onToggle(type, !enabled, hour, minute)}
-          className={`mt-0.5 h-6 w-11 flex-none shrink-0 basis-11 rounded-full relative transition-colors ${enabled ? "bg-ink" : "bg-zinc-200"}`}
+          className={`relative mt-0.5 h-6 w-11 shrink-0 justify-self-end rounded-full transition-colors ${enabled ? "bg-ink" : "bg-zinc-200"}`}
           aria-pressed={enabled}
           aria-label={label}
         >
@@ -261,18 +261,21 @@ function ReminderRow({
           />
         </button>
       </div>
-      {/* Reserve the time-picker slot so enabling a reminder never shifts the layout. */}
+      {/* The time-picker slot is always rendered (only faded/inert when off) so
+          toggling never changes row height or pushes the switch off-screen. */}
       {showTime && (
-        <input
-          type="time"
-          value={time}
-          disabled={!enabled}
-          onChange={(e) => {
-            const [h, m] = e.target.value.split(":").map(Number);
-            onToggle(type, true, h, m);
-          }}
-          className="mt-2 block w-[7.5rem] max-w-full text-xs rounded-md ring-1 ring-black/10 px-2 py-1 disabled:opacity-40"
-        />
+        <div className="mt-2 w-full max-w-full">
+          <input
+            type="time"
+            value={time}
+            disabled={!enabled}
+            onChange={(e) => {
+              const [h, m] = e.target.value.split(":").map(Number);
+              onToggle(type, true, h, m);
+            }}
+            className="block w-[7.5rem] max-w-full rounded-md px-2 py-1 text-xs ring-1 ring-black/10 disabled:opacity-40"
+          />
+        </div>
       )}
     </div>
   );
