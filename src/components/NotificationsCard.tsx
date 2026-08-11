@@ -153,7 +153,7 @@ export function NotificationsCard() {
       <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-3 flex items-center gap-2">
         <Bell className="size-3.5" /> {heading}
       </h3>
-      <div className="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-4 space-y-4">
+      <div className="bg-white rounded-2xl ring-1 ring-black/5 shadow-sm p-4 space-y-4 overflow-hidden">
         {permission !== "granted" || !subId ? (
           <>
             <p className="text-sm text-zinc-600">
@@ -243,33 +243,37 @@ function ReminderRow({
   const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-t border-zinc-100 pt-3 first:border-t-0 first:pt-0">
-      <div className="min-w-0">
-        <div className="text-sm font-medium break-words">{label}</div>
-        <div className="text-[11px] text-zinc-500 break-words">{subtitle}</div>
-        {showTime && (
-          <input
-            type="time"
-            value={time}
-            disabled={!enabled}
-            onChange={(e) => {
-              const [h, m] = e.target.value.split(":").map(Number);
-              onToggle(type, true, h, m);
-            }}
-            className="mt-2 w-[7.5rem] max-w-full text-xs rounded-md ring-1 ring-black/10 px-2 py-1 disabled:opacity-40"
+    <div className="w-full max-w-full border-t border-zinc-100 pt-3 first:border-t-0 first:pt-0">
+      <div className="flex w-full max-w-full items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-medium break-words">{label}</div>
+          <div className="text-[11px] text-zinc-500 break-words">{subtitle}</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onToggle(type, !enabled, hour, minute)}
+          className={`mt-0.5 h-6 w-11 flex-none shrink-0 basis-11 rounded-full relative transition-colors ${enabled ? "bg-ink" : "bg-zinc-200"}`}
+          aria-pressed={enabled}
+          aria-label={label}
+        >
+          <span
+            className={`absolute top-0.5 size-5 bg-white rounded-full shadow transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}
           />
-        )}
+        </button>
       </div>
-      <button
-        onClick={() => onToggle(type, !enabled, hour, minute)}
-        className={`h-6 w-11 shrink-0 rounded-full relative transition-colors ${enabled ? "bg-ink" : "bg-zinc-200"}`}
-        aria-pressed={enabled}
-        aria-label={label}
-      >
-        <span
-          className={`absolute top-0.5 size-5 bg-white rounded-full shadow transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}
+      {/* Reserve the time-picker slot so enabling a reminder never shifts the layout. */}
+      {showTime && (
+        <input
+          type="time"
+          value={time}
+          disabled={!enabled}
+          onChange={(e) => {
+            const [h, m] = e.target.value.split(":").map(Number);
+            onToggle(type, true, h, m);
+          }}
+          className="mt-2 block w-[7.5rem] max-w-full text-xs rounded-md ring-1 ring-black/10 px-2 py-1 disabled:opacity-40"
         />
-      </button>
+      )}
     </div>
   );
 }
