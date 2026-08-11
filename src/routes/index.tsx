@@ -114,7 +114,7 @@ function Dashboard() {
               {status.weekdayLabel}, {status.dateLabel}
             </p>
             <h1 className="text-2xl font-medium text-balance tracking-tight">
-              {greeting}
+              {hydrated ? greeting : t("Hallo", "Hello")}
               {displayName ? `, ${displayName}` : ""}.{" "}
               {status.isSunday
                 ? t("Heute ist Ruhetag.", "Today is a day of rest.")
