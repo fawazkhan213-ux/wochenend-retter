@@ -233,8 +233,8 @@ function PrivacySecurityCard() {
           </p>
           <p>
             {t("Kontakt:", "Contact:")}{" "}
-            <a className="underline" href="mailto:hallo@wochenend-retter.app">
-              hallo@wochenend-retter.app
+            <a className="underline break-all" href="mailto:wochenendretter@gmail.com">
+              wochenendretter@gmail.com
             </a>
           </p>
         </>
