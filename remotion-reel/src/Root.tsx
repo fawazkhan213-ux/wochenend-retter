@@ -3,6 +3,7 @@ import { MainVideo, DURATION } from "./MainVideo";
 import { PlanVideo, PLAN_DURATION } from "./PlanVideo";
 import { NotifyVideo, NOTIFY_DURATION } from "./NotifyVideo";
 import { WeekVideo, WEEK_DURATION } from "./WeekVideo";
+import { MatchaVideo, MATCHA_DURATION } from "./MatchaVideo";
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -34,6 +35,14 @@ export const RemotionRoot: React.FC = () => (
     id="week"
     component={WeekVideo}
     durationInFrames={WEEK_DURATION}
+    fps={30}
+    width={1080}
+    height={1920}
+  />
+  <Composition
+    id="matcha"
+    component={MatchaVideo}
+    durationInFrames={MATCHA_DURATION}
     fps={30}
     width={1080}
     height={1920}
