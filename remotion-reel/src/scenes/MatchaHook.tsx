@@ -15,37 +15,37 @@ export const MatchaHook: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: COLORS.cream, padding: 90, justifyContent: "center", gap: 26 }}>
       <div style={{
-        position: "absolute", right: -180, top: 120, width: 760, height: 760, borderRadius: "50%",
+        position: "absolute", right: -130, top: 90, width: 520, height: 520, borderRadius: "50%",
         background: COLORS.green,
         transform: `scale(${interpolate(circle, [0, 1], [0.6, 1])}) translateY(${drift}px)`,
         opacity: circle,
       }} />
       <div style={{
-        position: "absolute", right: -120, bottom: -140, width: 520, height: 520, borderRadius: "50%",
+        position: "absolute", right: -140, bottom: -160, width: 460, height: 460, borderRadius: "50%",
         background: COLORS.yellow, opacity: interpolate(frame, [20, 50], [0, 1], { extrapolateRight: "clamp" }),
       }} />
 
       <div style={{
-        alignSelf: "flex-start", background: COLORS.yellow, color: COLORS.ink,
+        position: "relative", alignSelf: "flex-start", background: COLORS.yellow, color: COLORS.ink,
         padding: "16px 32px", borderRadius: 999, fontFamily: body, fontWeight: 700,
         fontSize: 32, letterSpacing: 2,
         opacity: chip, transform: `translateY(${interpolate(chip, [0, 1], [-24, 0])}px)`,
       }}>SONNTAG · 11:40</div>
 
       <div style={{
-        fontFamily: display, fontWeight: 700, fontSize: 165, lineHeight: 0.92, letterSpacing: -5,
+        position: "relative", fontFamily: display, fontWeight: 700, fontSize: 150, lineHeight: 0.92, letterSpacing: -5,
         color: COLORS.ink,
         opacity: l1, transform: `translateY(${interpolate(l1, [0, 1], [50, 0])}px)`,
       }}>LUST AUF</div>
       <div style={{
-        fontFamily: display, fontWeight: 700, fontSize: 190, lineHeight: 0.9, letterSpacing: -6,
+        position: "relative", fontFamily: display, fontWeight: 700, fontSize: 172, lineHeight: 0.9, letterSpacing: -6,
         color: COLORS.green,
         opacity: l2, transform: `translateY(${interpolate(l2, [0, 1], [60, 0])}px)`,
       }}>MATCHA?</div>
 
       {/* geometric matcha cup */}
       <div style={{
-        marginTop: 30, position: "relative", width: 340, height: 240,
+        marginTop: 24, position: "relative", width: 300, height: 215,
         opacity: cup, transform: `scale(${cup}) translateY(${drift * 0.5}px)`,
       }}>
         <div style={{
@@ -63,7 +63,7 @@ export const MatchaHook: React.FC = () => {
       </div>
 
       <div style={{
-        fontFamily: body, fontSize: 38, color: COLORS.zinc, marginTop: 10,
+        position: "relative", fontFamily: body, fontSize: 38, color: COLORS.zinc, marginTop: 10,
         opacity: interpolate(frame, [46, 66], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
       }}>Alles zu. Oder doch nicht?</div>
     </AbsoluteFill>

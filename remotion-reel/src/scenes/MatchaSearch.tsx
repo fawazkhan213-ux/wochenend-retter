@@ -14,7 +14,7 @@ export const MatchaSearch: React.FC = () => {
   const { fps } = useVideoConfig();
   const head = spring({ frame, fps, config: { damping: 22 } });
   const bar = spring({ frame: frame - 10, fps, config: { damping: 18, stiffness: 140 } });
-  const chars = Math.max(0, Math.min(WORD.length, Math.floor((frame - 20) / 4)));
+  const chars = Math.max(0, Math.min(WORD.length, Math.floor((frame - 12) / 3)));
   const caret = Math.floor(frame / 8) % 2 === 0 ? 1 : 0;
 
   return (
@@ -48,7 +48,7 @@ export const MatchaSearch: React.FC = () => {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 18, marginTop: 10 }}>
         {ROWS.map((r, i) => {
-          const s = spring({ frame: frame - 46 - i * 8, fps, config: { damping: 200 } });
+          const s = spring({ frame: frame - 34 - i * 7, fps, config: { damping: 200 } });
           return (
             <div key={i} style={{
               background: "#fff", borderRadius: 28, padding: "26px 32px",
