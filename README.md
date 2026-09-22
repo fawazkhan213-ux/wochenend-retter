@@ -21,6 +21,22 @@ The basic process is:
 5. After the product reaches the defined repetition threshold, it is recognized as a recurring item.
 6. When the user creates a new shopping list, the recurring product can be recommended automatically.
 
+## 📸 Screenshots
+
+### Desktop
+![Main screen](./screenshots/main.jpg)
+
+### Shopping List
+![Shopping list](./screenshots/liste.jpg)
+
+### Open Stores
+![Open stores](./screenshots/offen.jpg)
+
+## 🌐 Live Demo
+
+[Open Wochenend-Retter](https://wochenend-retter.lovable.app/)
+
+
 ### Example
 
 ```text
@@ -38,18 +54,3 @@ Milk is identified as a recurring purchase
 New Shopping List
 
 💡 Recommended: Milk
-
-## 📸 Screenshots
-
-### Desktop
-![Main screen](./screenshots/main.jpg)
-
-### Shopping List
-![Shopping list](./screenshots/liste.jpg)
-
-### Open Stores
-![Open stores](./screenshots/offen.jpg)
-
-## 🌐 Live Demo
-
-[Open Wochenend-Retter](https://wochenend-retter.lovable.app/)
