@@ -38,3 +38,18 @@ Milk is identified as a recurring purchase
 New Shopping List
 
 💡 Recommended: Milk
+
+## 📸 Screenshots
+
+### Desktop
+![Main screen](./screenshots/main.jpg)
+
+### Shopping List
+![Shopping list](./screenshots/liste.jpg)
+
+### Open Stores
+![Open stores](./screenshots/offen.jpg)
+
+## 🌐 Live Demo
+
+[Open Wochenend-Retter](https://wochenend-retter.lovable.app/)
