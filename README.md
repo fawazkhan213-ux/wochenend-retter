@@ -1,4 +1,4 @@
-# Wochenend-Retter
+# Wochenend-Retter 🛒
 
 A web application designed to help users prepare for the weekend by managing shopping lists and identifying products they regularly purchase.
 
@@ -36,21 +36,3 @@ The basic process is:
 
 [Open Wochenend-Retter](https://wochenend-retter.lovable.app/)
 
-
-### Example
-
-```text
-Shopping List 1
-☑ Milk
-
-Shopping List 2
-☑ Milk
-
-Shopping List 3
-☑ Milk
-        ↓
-Milk is identified as a recurring purchase
-        ↓
-New Shopping List
-
-💡 Recommended: Milk
