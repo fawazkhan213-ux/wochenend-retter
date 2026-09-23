@@ -23,7 +23,7 @@ The basic process is:
 
 ## 📸 Screenshots
 
-### Desktop
+### Main Screen
 ![Main screen](./screenshots/main.jpg)
 
 ### Shopping List
