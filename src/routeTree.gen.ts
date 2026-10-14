@@ -9,54 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AccountRouteImport } from './routes/account'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as OpenSundayRouteImport } from './routes/open-sunday'
-import { Route as PlanRouteImport } from './routes/plan'
-import { Route as ShoppingRouteImport } from './routes/shopping'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as VerkaufsoffeneSonntageRouteImport } from './routes/verkaufsoffene-sonntage'
-import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as PlanRouteImport } from './routes/plan'
+import { Route as OpenSundayRouteImport } from './routes/open-sunday'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHooksSendRemindersRouteImport } from './routes/api/public/hooks/send-reminders'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AccountRoute = AccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OpenSundayRoute = OpenSundayRouteImport.update({
-  id: '/open-sunday',
-  path: '/open-sunday',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlanRoute = PlanRouteImport.update({
-  id: '/plan',
-  path: '/plan',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShoppingRoute = ShoppingRouteImport.update({
-  id: '/shopping',
-  path: '/shopping',
+const VerkaufsoffeneSonntageRoute = VerkaufsoffeneSonntageRouteImport.update({
+  id: '/verkaufsoffene-sonntage',
+  path: '/verkaufsoffene-sonntage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -64,21 +34,57 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VerkaufsoffeneSonntageRoute = VerkaufsoffeneSonntageRouteImport.update({
-  id: '/verkaufsoffene-sonntage',
-  path: '/verkaufsoffene-sonntage',
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanRoute = PlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OpenSundayRoute = OpenSundayRouteImport.update({
+  id: '/open-sunday',
+  path: '/open-sunday',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const Char91DotmcpChar93ListToolsRoute =
   Char91DotmcpChar93ListToolsRouteImport.update({
     id: '/.mcp/list-tools',
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
@@ -86,12 +92,6 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksSendRemindersRoute =
   ApiPublicHooksSendRemindersRouteImport.update({
     id: '/api/public/hooks/send-reminders',
@@ -218,53 +218,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/account': {
-      id: '/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AccountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/open-sunday': {
-      id: '/open-sunday'
-      path: '/open-sunday'
-      fullPath: '/open-sunday'
-      preLoaderRoute: typeof OpenSundayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plan': {
-      id: '/plan'
-      path: '/plan'
-      fullPath: '/plan'
-      preLoaderRoute: typeof PlanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shopping': {
-      id: '/shopping'
-      path: '/shopping'
-      fullPath: '/shopping'
-      preLoaderRoute: typeof ShoppingRouteImport
+    '/verkaufsoffene-sonntage': {
+      id: '/verkaufsoffene-sonntage'
+      path: '/verkaufsoffene-sonntage'
+      fullPath: '/verkaufsoffene-sonntage'
+      preLoaderRoute: typeof VerkaufsoffeneSonntageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -274,18 +232,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/verkaufsoffene-sonntage': {
-      id: '/verkaufsoffene-sonntage'
-      path: '/verkaufsoffene-sonntage'
-      fullPath: '/verkaufsoffene-sonntage'
-      preLoaderRoute: typeof VerkaufsoffeneSonntageRouteImport
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/list-tools': {
-      id: '/.mcp/list-tools'
-      path: '/.mcp/list-tools'
-      fullPath: '/.mcp/list-tools'
-      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/open-sunday': {
+      id: '/open-sunday'
+      path: '/open-sunday'
+      fullPath: '/open-sunday'
+      preLoaderRoute: typeof OpenSundayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/oauth-protected-resource': {
@@ -295,11 +288,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.lovable/oauth/consent': {
-      id: '/.lovable/oauth/consent'
-      path: '/.lovable/oauth/consent'
-      fullPath: '/.lovable/oauth/consent'
-      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/invoke-tool/$tool': {
@@ -307,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/.mcp/invoke-tool/$tool'
       fullPath: '/.mcp/invoke-tool/$tool'
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/send-reminders': {
